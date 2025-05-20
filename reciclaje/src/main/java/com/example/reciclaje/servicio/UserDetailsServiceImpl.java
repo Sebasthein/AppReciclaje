@@ -1,0 +1,48 @@
+package com.example.reciclaje.servicio;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import com.example.reciclaje.entidades.Rol;
+import com.example.reciclaje.entidades.Usuario;
+import com.example.reciclaje.entidades.UsuarioRol;
+import com.example.reciclaje.repositorio.UsuarioRepositorio;
+import com.example.reciclaje.seguridad.CustomUserDetails;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class UserDetailsServiceImpl implements UserDetailsService {
+
+	 private final UsuarioRepositorio usuarioRepository;
+
+	    @Override
+	    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+	        Usuario usuario = usuarioRepository.findByEmail(email)
+	            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
+	        
+	        return new org.springframework.security.core.userdetails.User(
+	            usuario.getEmail(),
+	            usuario.getPassword(),
+	            usuario.getRoles().stream()
+	                .map(rol -> new SimpleGrantedAuthority(rol.getNombre()))
+	                .collect(Collectors.toList())
+	        );
+	    }
+
+    private Collection<? extends GrantedAuthority> getAuthorities(Set<Rol> roles) {
+        return roles.stream()
+            .map(rol -> new SimpleGrantedAuthority("ROLE_" + rol.getNombre()))
+            .collect(Collectors.toList());
+    }
+}
