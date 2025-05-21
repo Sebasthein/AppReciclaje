@@ -43,7 +43,6 @@ import lombok.RequiredArgsConstructor;
 public class UsuarioController {
 
 	private final PasswordEncoder passwordEncoder;
-	//cambio
   //  private final SecurityConfig securityConfig;
 	 private final UsuarioServicio usuarioService;
 	 private final RolRepositorio rolRepository;
