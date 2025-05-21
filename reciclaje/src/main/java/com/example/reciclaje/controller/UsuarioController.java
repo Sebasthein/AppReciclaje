@@ -53,19 +53,27 @@ public class UsuarioController {
 	 public ResponseEntity<Map<String, Object>> registrarUsuarioApi(@Valid @RequestBody RegistroRequest registroRequest) {
 	     Map<String, Object> response = new HashMap<>();
 	     
+	     
 	     try {
+	    	 
 	         // Verificar si el email ya existe
 	         if (usuarioRepository.existsByEmail(registroRequest.getEmail())) {
 	             throw new IllegalArgumentException("El email ya está registrado");
 	         }
 
+	      // Debug: Verificar datos recibidos
+	         System.out.println("Datos recibidos para registro:");
+	            System.out.println("Nombre: " + registroRequest.getNombre());
+	            System.out.println("Email: " + registroRequest.getEmail());
+	            System.out.println("Dirección: " +registroRequest.getDireccion());
+	            System.out.println("Teléfono: " + registroRequest.getTelefono());
 	         // Crear el nuevo usuario
 	         Usuario usuario = new Usuario();
 	         usuario.setNombre(registroRequest.getNombre());
 	         usuario.setEmail(registroRequest.getEmail());
 	         usuario.setPassword(passwordEncoder.encode(registroRequest.getPassword()));
 	         usuario.setTelefono(registroRequest.getTelefono());
-	        // usuario.setDireccion(registroRequest.getDireccion());
+	         usuario.setDireccion(registroRequest.getDireccion());
 	         usuario.setAvatarId(registroRequest.getAvatarId());
 	         usuario.setPuntos(0); // Puntos iniciales
 	         

@@ -429,18 +429,18 @@
                             <div id="telefonoError" class="invalid-feedback"></div>
                         </div>
 
-                        <div class="mb-4">
-                            <label for="direccion" class="form-label">Dirección</label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                </span>
-                                <input type="text" id="direccion" name="direccion" class="form-control" 
-                                       placeholder="Ej: Calle 123 #45-67">
-                            </div>
-                            <div id="direccionError" class="invalid-feedback"></div>
-                        </div>
-                    </div>
+						<div class="mb-4">
+							<label for="direccion" class="form-label">Dirección</label>
+							<div class="input-group">
+								<span class="input-group-text"> <i
+									class="fas fa-map-marker-alt"></i>
+								</span> <input type="text" id="direccion" name="direccion"
+									class="form-control" placeholder="Ej: Calle 123 #45-67"
+									required>
+							</div>
+							<div id="direccionError" class="invalid-feedback"></div>
+						</div>
+					</div>
                     
                     <div class="form-section">
                         <div class="section-title">
@@ -543,32 +543,38 @@
             
             // Función para mostrar mensajes de alerta personalizados (reemplazo de alert())
             function showCustomAlert(message, type = 'info') {
-                const alertPlaceholder = document.getElementById('alertPlaceholder');
-                if (!alertPlaceholder) {
-                    const newPlaceholder = document.createElement('div');
-                    newPlaceholder.id = 'alertPlaceholder';
-                    newPlaceholder.style.position = 'fixed';
-                    newPlaceholder.style.top = '20px';
-                    newPlaceholder.style.right = '20px';
-                    newPlaceholder.style.zIndex = '1050'; // Bootstrap modal z-index is 1050
-                    document.body.appendChild(newPlaceholder);
-                    alertPlaceholder = newPlaceholder;
-                }
+     const getOrCreatePlaceholder = () => {
+        let placeholder = document.getElementById('alertPlaceholder');
+        if (!placeholder) {
+            placeholder = document.createElement('div');
+            placeholder.id = 'alertPlaceholder';
+            Object.assign(placeholder.style, {
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
+                zIndex: '1050'
+            });
+            document.body.appendChild(placeholder);
+        }
+        return placeholder;
+    };
 
-                const wrapper = document.createElement('div');
-                wrapper.innerHTML = [
-                    `<div class="alert alert-${type} alert-dismissible fade show" role="alert">`,
-                    `   <div>${message}</div>`,
-                    '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
-                    '</div>'
-                ].join('');
+    const placeholder = getOrCreatePlaceholder();
+    const alertHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <div>${message}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
 
-                alertPlaceholder.append(wrapper);
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = alertHTML;
+    placeholder.append(wrapper);
 
-                setTimeout(() => {
-                    bootstrap.Alert.getInstance(wrapper.querySelector('.alert'))?.close();
-                }, 5000); // Cierra la alerta después de 5 segundos
-            }
+    setTimeout(() => {
+        bootstrap.Alert.getInstance(wrapper.querySelector('.alert'))?.close();
+    }, 5000);
+}
 
             // Toggle para mostrar/ocultar contraseña
             togglePassword.addEventListener('click', function() {
@@ -614,7 +620,7 @@
             
             function validateForm() {
                 let isValid = true;
-                const requiredFields = ['nombre', 'email', 'password', 'confirmPassword'];
+                const requiredFields = ['nombre', 'email', 'password', 'confirmPassword','direccion'];
                 
                 // Reset errores
                 document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
@@ -685,6 +691,9 @@
                     direccion: document.getElementById('direccion').value.trim(),
                     password: document.getElementById('password').value,
                 };
+                
+    			console.log("Datos a enviar:", formData); // Verifica que la dirección está incluida
+                
 
                 // Realiza la petición fetch
                 fetch('/api/registro', {

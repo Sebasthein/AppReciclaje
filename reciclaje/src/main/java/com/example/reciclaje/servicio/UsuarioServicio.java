@@ -21,9 +21,11 @@ import com.example.reciclaje.servicioDTO.UsuarioDTO;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UsuarioServicio {
 
     private final UsuarioRepositorio usuarioRepository;
@@ -38,7 +40,7 @@ public class UsuarioServicio {
     );
     
     // Estilo de DiceBear a utilizar. Puedes cambiarlo a "lorelei", "avataaars", "fun-emoji", etc.
-    private static final String DICEBEAR_STYLE = "pixel-art";
+    private static final String DICEBEAR_STYLE = "bottts";
 
     // Método para generar la URL del avatar de DiceBear
     private String generarDiceBearAvatarUrl(String seed) {
@@ -63,12 +65,25 @@ public class UsuarioServicio {
 
     @Transactional
     public UsuarioDTO registrarUsuarioConRol(Usuario usuario) {
+    	
+    	  log.info("Intentando registrar usuario con datos:");
+    	    log.info("Nombre: {}", usuario.getNombre());
+    	    log.info("Email: {}", usuario.getEmail());
+    	    log.info("Dirección: {}", usuario.getDireccion());
+    	    log.info("Teléfono: {}", usuario.getTelefono());
+
+    	    if (usuario.getDireccion() == null) {
+    	        log.warn("La dirección es null, asignando valor por defecto");
+    	        usuario.setDireccion("Sin dirección especificada");
+    	    }
+    	    
         if (usuarioRepository.existsByEmail(usuario.getEmail())) {
             throw new IllegalArgumentException("El email ya está registrado");
         }
         
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         usuario.setPuntos(0);
+        usuario.setDireccion(usuario.getDireccion() != null ? usuario.getDireccion() : ""); // Valor por defecto si es null
 
         if (usuario.getNivel() == null) {
             Nivel nivelInicial = nivelRepository.findByPuntosMinimos(0)
@@ -89,8 +104,14 @@ public class UsuarioServicio {
         // Usamos el email como semilla porque el ID del usuario podría no estar disponible aún
         // si el usuario no ha sido guardado en la DB por primera vez.
         usuario.setAvatarId(generarDiceBearAvatarUrl(usuario.getEmail()));
+        
+        
 
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
+        
+        log.info("Usuario guardado con ID: {}, Dirección: {}", 
+                usuarioGuardado.getId(), usuarioGuardado.getDireccion());
+        
         
         return convertirAUsuarioDTO(usuarioGuardado);
     }
@@ -98,6 +119,8 @@ public class UsuarioServicio {
     // Método para actualizar el perfil del usuario, incluyendo el avatar
     @Transactional
     public Usuario actualizarPerfil(Usuario usuarioActualizado) {
+    	
+    	
         Usuario usuarioExistente = usuarioRepository.findById(usuarioActualizado.getId())
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
@@ -123,6 +146,9 @@ public class UsuarioServicio {
         if (usuarioActualizado.getPassword() != null && !usuarioActualizado.getPassword().isEmpty()) {
             usuarioExistente.setPassword(passwordEncoder.encode(usuarioActualizado.getPassword()));
         }
+       
+       
+      
 
         return usuarioRepository.save(usuarioExistente);
     }
