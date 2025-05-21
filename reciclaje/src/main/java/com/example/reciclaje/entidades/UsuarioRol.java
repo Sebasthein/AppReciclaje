@@ -2,6 +2,7 @@ package com.example.reciclaje.entidades;
 
 import java.time.LocalDate;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -34,7 +35,9 @@ public class UsuarioRol {
 	    @JoinColumn(name = "rol_id", nullable = false)
 	    private Rol rol;
 
-	    private boolean activo = true;
+	    @Column(nullable = false, columnDefinition = "boolean default true")
+	    private Boolean activo = true; // Valor por defecto
+	    
 	    private LocalDate fechaAsignacion = LocalDate.now();
 
 	    // Constructor para fácil creación

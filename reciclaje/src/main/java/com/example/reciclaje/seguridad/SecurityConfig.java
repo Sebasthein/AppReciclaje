@@ -54,7 +54,7 @@ public class SecurityConfig {
 	        http
 	            .csrf(csrf -> csrf.disable())
 	            .authorizeHttpRequests(auth -> auth
-	                .requestMatchers("/login", "/registro","/api/**", "/css/**", "/js/**","/img/**").permitAll() // Permitir acceso a estas rutas
+	                .requestMatchers("/login", "/registro","/api/**","/api/usuarios/registro", "/css/**", "/js/**","/img/**").permitAll() // Permitir acceso a estas rutas
 	                .requestMatchers("/admin/**").hasRole("ADMIN")
 	                .anyRequest().authenticated() // El resto requiere autenticación
 	            )

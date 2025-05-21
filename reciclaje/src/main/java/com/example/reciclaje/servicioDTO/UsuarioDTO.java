@@ -13,10 +13,14 @@ public class UsuarioDTO {
 	private Long usuarioRolId;
     private String nombre;
     private String email;
+    private String password;
+    private String telefono;
+    private String avatarId;
+    private String direccion;
     private int puntos;
     private String nombreNivel; // Nombre del nivel
     private String rolAsignado;
-
+ 
     
     public UsuarioDTO(Usuario usuario) {
         this.id = usuario.getId();
@@ -24,6 +28,13 @@ public class UsuarioDTO {
         this.email = usuario.getEmail();
         this.puntos = usuario.getPuntos();
         this.nombreNivel = usuario.getNivel().getNombre();
-        // usuarioRolId y rolAsignado se asignan después en el servicio
+       this.direccion= usuario.getDireccion();
+      
     }
+
+	public UsuarioDTO() {
+		super();
+	}
+    
+    
 }

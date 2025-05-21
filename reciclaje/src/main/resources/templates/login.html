@@ -3,12 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Green Coin - Login</title>
+    <title>Green Coin - Iniciar Sesión</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-green: #2E7D32;
+            --light-green: #81C784;
+            --dark-green: #1B5E20;
+            --accent-green: #4CAF50;
+            --leaf-green: #689F38;
+            --white-transparent: rgba(255, 255, 255, 0.9);
+        }
+        
         body {
             margin: 0;
             padding: 0;
@@ -16,82 +27,188 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: url('https://media1.moneywise.com/cdn-cgi/image/fit=cover,g=left,width=991,height=425,f=auto,quality=90/topic/investing/best-small-businesses-investing-751/shutterstock_1706856193-1691164425.jpg') no-repeat center center fixed;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+                        url('https://images.unsplash.com/photo-1605000797499-95a51c5269ae?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
             background-size: cover;
-            position: relative;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
         
-        body::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(46, 125, 50, 0.6);
-            z-index: -1;
+        .auth-container {
+            max-width: 450px;
+            width: 90%;
+            padding: 2.5rem;
+            border-radius: 20px;
+            background: var(--white-transparent);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
         }
         
-        .game-card {
-            max-width: 500px;
-            width: 100%;
-            padding: 30px;
-            border-radius: 15px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        .auth-container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            background-color: var(--primary-green);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
             color: white;
         }
         
-        /* Resto de tus estilos... */
+        .auth-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            color: var(--dark-green);
+            margin-bottom: 0.5rem;
+        }
+        
+        .auth-subtitle {
+            font-weight: 300;
+            font-size: 1rem;
+            color: var(--primary-green);
+        }
+        
+        .form-floating label {
+            color: var(--dark-green);
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--light-green);
+            box-shadow: 0 0 0 0.25rem rgba(76, 175, 80, 0.25);
+        }
+        
+        .btn-auth {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary-green), var(--leaf-green));
+            border: none;
+            color: white;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+        }
+        
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 125, 50, 0.6);
+            background: linear-gradient(135deg, var(--dark-green), var(--primary-green));
+        }
+        
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--dark-green);
+        }
+        
+        .auth-link {
+            color: var(--primary-green);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .auth-link:hover {
+            color: var(--dark-green);
+            text-decoration: underline;
+        }
+        
+        .alert-message {
+            border-radius: 10px;
+            text-align: center;
+            padding: 12px;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .auth-container {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        /* Responsive */
+        @media (max-width: 576px) {
+            .auth-container {
+                padding: 1.5rem;
+            }
+            
+            .auth-title {
+                font-size: 1.8rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="game-card">
-        <div class="game-header">
-            <h1 class="game-title">GREEN COIN</h1>
-            <p class="game-subtitle">Recicla, gana puntos y salva el planeta</p>
-            <div th:if="${param.error}" class="alert alert-danger">
-                Credenciales inválidas
+    <div class="auth-container">
+        <div class="logo-container">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
             </div>
-            <div th:if="${param.logout}" class="alert alert-success">
-                Has cerrado sesión correctamente
+            <h1 class="auth-title">GREEN COIN</h1>
+            <p class="auth-subtitle">Tu compromiso ecológico recompensado</p>
+            
+            <!-- Mensajes de error/éxito -->
+            <div th:if="${param.error}" class="alert-message alert alert-danger">
+                <i class="fas fa-exclamation-circle me-2"></i> Credenciales incorrectas
+            </div>
+            <div th:if="${param.logout}" class="alert-message alert alert-success">
+                <i class="fas fa-check-circle me-2"></i> Sesión cerrada correctamente
             </div>
         </div>
-
-        <div class="divider"></div>
-        
-        <h5 class="mb-4"><i class="fas fa-sign-in-alt me-2"></i> Iniciar Sesión</h5>
         
         <form th:action="@{/login}" method="post">
-            <div class="mb-3">
-                <input type="email" class="form-control" name="username" placeholder="Correo electrónico" required>
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" id="email" name="username" placeholder="Correo electrónico" required>
+                <label for="email"><i class="fas fa-envelope me-2"></i>Correo electrónico</label>
             </div>
-            <div class="mb-3">
-                <input type="password" class="form-control" name="password" placeholder="Contraseña" required>
+            <div class="form-floating mb-4">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Contraseña" required>
+                <label for="password"><i class="fas fa-lock me-2"></i>Contraseña</label>
             </div>
-            <button type="submit" class="btn btn-game">
-                <i class="fas fa-leaf me-2"></i> Ingresar
+            
+            <button type="submit" class="btn btn-auth mb-3">
+                <i class="fas fa-sign-in-alt me-2"></i> Iniciar Sesión
             </button>
+            
             <div class="text-center mt-3">
-                <a href="#" class="text-white-50">¿Olvidaste tu contraseña?</a>
-                <p class="text-white-50 mt-2">¿No tienes cuenta? <a href="/registro" class="text-white">Regístrate</a></p>
+                <a href="#" class="auth-link">
+                    <i class="fas fa-key me-1"></i> ¿Olvidaste tu contraseña?
+                </a>
             </div>
         </form>
         
-        <div class="divider mt-4"></div>
-        
-        <ul class="nav flex-column">
-            <li>
-                <a class="game-nav-link" href="#">
-                    <i class="fas fa-recycle game-icon"></i>Centros de Reciclaje
-                </a>
-            </li>
-            <!-- Resto de tus enlaces... -->
-        </ul>
+        <div class="auth-footer">
+            <p>¿No tienes una cuenta? <a th:href="@{/registro}" class="auth-link fw-bold">Regístrate ahora</a></p>
+        </div>
     </div>
 
     <!-- Bootstrap JS Bundle with Popper -->

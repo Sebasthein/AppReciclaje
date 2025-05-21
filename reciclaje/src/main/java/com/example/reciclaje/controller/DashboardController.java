@@ -41,6 +41,7 @@ public class DashboardController {
 
 	        model.addAttribute("email", email);
 	        model.addAttribute("points", puntos);
+	    
 
 	        return "dashboard"; // Vista: src/main/resources/templates/dashboard.html
 	    }
