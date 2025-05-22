@@ -158,30 +158,57 @@ usuario.setTelefono(registroRequest.getTelefono());
 		return "acceso-denegado";
 	}
 	
+	//Actualizacion de perfil
 	@PostMapping("/perfil/actualizar")
-    public String actualizarPerfil(
-            @RequestParam String nombre,
-            @RequestParam String email,
-            @RequestParam(required = false) String telefono,
-            @RequestParam(required = false) String direccion,
-            @RequestParam(required = false) String currentPassword,
-            @RequestParam(required = false) String newPassword,
-            @RequestParam(required = false) String confirmPassword,
-            @RequestParam(required = false) MultipartFile foto,
-            @RequestParam(required = false) String avatarId,
-            RedirectAttributes redirectAttributes) {
-    	
-    	Usuario user = new Usuario(null, nombre, email, direccion, 0, telefono, avatarId, avatarId, null, null, null, null, null);
-        try {
-            // Llamada al servicio para actualizar el perfil
-            usuarioServicio.actualizarPerfil(user);
+	public String actualizarPerfil(
+	        @RequestParam String nombre,
+	        @RequestParam String email,
+	        @RequestParam(required = false) String telefono,
+	        @RequestParam(required = false) String direccion,
+	        @RequestParam(required = false) String currentPassword,
+	        @RequestParam(required = false) String newPassword,
+	        @RequestParam(required = false) String confirmPassword,
+	        Principal principal,
+	        RedirectAttributes redirectAttributes) {
+	    
+	    try {
+	        // Obtener el usuario actual desde la base de datos
+	        Usuario usuarioActual = usuarioServicio.findByEmail(principal.getName());
+	        
+	        // Actualizar solo los campos permitidos
+	        usuarioActual.setNombre(nombre);
+	        usuarioActual.setTelefono(telefono);
+	        usuarioActual.setDireccion(direccion);
+	        
+	        // Manejar cambio de contraseña si se proporciona
+	        if (currentPassword != null && !currentPassword.isEmpty() &&
+	            newPassword != null && !newPassword.isEmpty()) {
+	            
+	            // Verificar que la contraseña actual sea correcta
+	            if (!usuarioServicio.validarPassword(usuarioActual, currentPassword)) {
+	                redirectAttributes.addFlashAttribute("error", "La contraseña actual no es correcta");
+	                return "redirect:/dashboard";
+	            }
+	            
+	            // Verificar que las nuevas contraseñas coincidan
+	            if (!newPassword.equals(confirmPassword)) {
+	                redirectAttributes.addFlashAttribute("error", "Las nuevas contraseñas no coinciden");
+	                return "redirect:/dashboard";
+	            }
+	            
+	            // Actualizar la contraseña
+	            usuarioServicio.cambiarPassword(usuarioActual, newPassword);
+	        }
+	        
+	        // Guardar los cambios
+	        usuarioServicio.actualizarUsuario(usuarioActual);
+	        
+	        redirectAttributes.addFlashAttribute("success", "Perfil actualizado correctamente");
+	    } catch (Exception e) {
+	        redirectAttributes.addFlashAttribute("error", "Error al actualizar: " + e.getMessage());
+	    }
 
-            redirectAttributes.addFlashAttribute("success", "Perfil actualizado correctamente");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al actualizar: " + e.getMessage());
-        }
-
-        return "redirect:/dashboard"; // Redirige al dashboard tras la actualización
+	    return "redirect:/dashboard";
     }
 
 }

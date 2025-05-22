@@ -243,4 +243,17 @@ public class UsuarioServicio {
         return usuarioRepository.findByEmail(email)
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
     }
+    
+    public boolean validarPassword(Usuario usuario, String currentPassword) {
+        return passwordEncoder.matches(currentPassword, usuario.getPassword());
+    }
+
+    public void cambiarPassword(Usuario usuario, String newPassword) {
+        usuario.setPassword(passwordEncoder.encode(newPassword));
+        usuarioRepository.save(usuario);
+    }
+
+    public void actualizarUsuario(Usuario usuario) {
+        usuarioRepository.save(usuario);
+    }
 }

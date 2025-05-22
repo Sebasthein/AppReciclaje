@@ -53,7 +53,7 @@ public class UsuarioController {
 	 public ResponseEntity<Map<String, Object>> registrarUsuarioApi(@Valid @RequestBody RegistroRequest registroRequest) {
 	     Map<String, Object> response = new HashMap<>();
 	     
-	     
+	    
 	     try {
 	    	 
 	         // Verificar si el email ya existe
