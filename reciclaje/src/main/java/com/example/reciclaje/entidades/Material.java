@@ -17,60 +17,36 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "materiales")
-@Data
-@Getter
-@Setter
-@Builder
-
-@AllArgsConstructor
+@Table(name = "materiales") // Asegúrate de que el nombre de la tabla en la DB sea 'materiales'
+@Data // Reemplaza @Getter y @Setter para ser más conciso
+@Builder // Para poder construir objetos Material usando Material.builder()...build()
+@NoArgsConstructor // Necesario para JPA
+@AllArgsConstructor // Genera un constructor con todos los campos
 public class Material {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nombre;
-    private String description;
+
+    @Column(name = "descripcion") // Mapea 'descripcion' en la DB a 'descripcion' en la entidad
+    private String descripcion;   // ¡Cambio de 'description' a 'descripcion' para consistencia!
+
     private String categoria;
+
+    @Column(name = "puntos_por_unidad") // Mapea 'puntos_por_unidad' en la DB a 'puntosPorUnidad'
     private Integer puntosPorUnidad;
-   // private String imagenUrl; // Asegúrate de tener este campo
+
+    // Puedes descomentar si realmente necesitas almacenar URLs de imagen.
+    // private String imagenUrl;
+
     private Boolean reciclable;
-    
-    @Column(name = "codigo_barra", unique = true)
+
+    @Column(name = "codigo_barra", unique = true) // Mapea 'codigo_barras' en la DB a 'codigoBarra'
     private String codigoBarra;
 
-    // Constructor explícito con todos los campos (incluyendo id)
-
-
-
+    // Relación OneToMany con Reciclaje
     @OneToMany(mappedBy = "material")
     private List<Reciclaje> reciclajes;
-
- // Constructor completo
-   public Material(String nombre, String description, String categoria, 
-                   String imagenUrl, int puntosPorUnidad, boolean reciclable, 
-                   String codigoBarra) {
-        this.nombre = nombre;
-        this.description = description;
-        this.categoria = categoria;
-      //  this.imagenUrl = imagenUrl;
-        this.puntosPorUnidad = puntosPorUnidad;
-        this.reciclable = reciclable;
-        this.codigoBarra = codigoBarra;
-    }
-
-    public Material(Long id, String nombre, String categoria, int puntosPorUnidad, String imagenUrl, String codigoBarra) {
-        this.id = id;
-        this.nombre = nombre;
-        this.categoria = categoria;
-        this.puntosPorUnidad = puntosPorUnidad;
-      //  this.imagenUrl = imagenUrl;
-        this.codigoBarra = codigoBarra;
-        this.reciclable = true; // Valor por defecto
-        this.description = "";  // Valor por defecto
-    }
-    // Constructor vacío (necesario para JPA)
-    public Material() {
-    }
 
 	
 }

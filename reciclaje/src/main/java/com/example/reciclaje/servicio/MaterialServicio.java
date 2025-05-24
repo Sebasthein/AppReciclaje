@@ -49,7 +49,7 @@ public class MaterialServicio {
 				.puntosPorUnidad(puntos)
 				.codigoBarra(codigo)
 				.reciclable(true)
-				.description("Material para reciclaje de " + categoria) // Considera si 'description' o 'descripcion'
+				.descripcion("Material para reciclaje de " + categoria) // Considera si 'description' o 'descripcion'
 				// .imagenUrl(imagenUrl) // Descomenta si usas imagenUrl
 				.build();
 	}
@@ -83,8 +83,8 @@ public class MaterialServicio {
 			material.setReciclable(true);
 		}
 		// Considera si 'description' también debería tener un valor por defecto si no viene
-		if (material.getDescription() == null || material.getDescription().trim().isEmpty()) {
-		    material.setDescription("Material para reciclaje de " + material.getCategoria());
+		if (material.getDescripcion() == null || material.getDescripcion().trim().isEmpty()) {
+		    material.setDescripcion("Material para reciclaje de " + material.getCategoria());
 		}
 
 
@@ -98,7 +98,7 @@ public class MaterialServicio {
 
 		// Actualizar solo los campos que se permiten actualizar
 		existente.setNombre(material.getNombre());
-		existente.setDescription(material.getDescription());
+		existente.setDescripcion(material.getDescripcion());
 		existente.setCategoria(material.getCategoria());
 		existente.setPuntosPorUnidad(material.getPuntosPorUnidad());
 		existente.setReciclable(material.getReciclable());
@@ -132,9 +132,9 @@ public class MaterialServicio {
 			
 			// Campos opcionales
 			if (jsonNode.hasNonNull("descripcion")) { // Usar hasNonNull para asegurar que el valor no es null
-				material.setDescription(jsonNode.get("descripcion").asText());
+				material.setDescripcion(jsonNode.get("descripcion").asText());
 			} else {
-				material.setDescription("Material para reciclaje de " + material.getCategoria());
+				material.setDescripcion("Material para reciclaje de " + material.getCategoria());
 			}
 			
 			if (jsonNode.hasNonNull("codigoBarra")) {
