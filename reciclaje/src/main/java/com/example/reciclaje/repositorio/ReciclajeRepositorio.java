@@ -12,5 +12,8 @@ public interface ReciclajeRepositorio extends JpaRepository<Reciclaje, Long> {
     List<Reciclaje> findByUsuario(Usuario usuario);
     List<Reciclaje> findByFecha(LocalDate fecha);
     List<Reciclaje> findByUsuarioId(Long usuarioId);
+    int countByUsuarioIdAndValidadoTrue(Long usuarioId);
+	List<Reciclaje> findByValidadoFalse();
+    
     
 }

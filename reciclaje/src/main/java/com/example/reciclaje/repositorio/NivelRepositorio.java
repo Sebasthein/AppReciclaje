@@ -21,4 +21,5 @@ public interface NivelRepositorio extends JpaRepository<Nivel, Long> {
      * @return Nivel correspondiente
      */
     Optional<Nivel> findByPuntosMinimos(int puntosMinimos);
+    Optional<Nivel> findTopByPuntosMinimosLessThanEqualOrderByPuntosMinimosDesc(int puntos);
 }

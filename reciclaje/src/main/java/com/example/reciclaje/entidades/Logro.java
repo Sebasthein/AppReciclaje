@@ -32,6 +32,7 @@ public class Logro {
 
     private String nombre;
     private String descripcion;
+    private String imagenTrofeo; 
 
 
     @ManyToMany

@@ -46,6 +46,8 @@ public class Reciclaje {
 	    @Column(nullable = false)
 	    private boolean validado = false;
 	    private LocalDateTime fechaValidacion;
+	    private String codigoProducto;
+
 
 		
 

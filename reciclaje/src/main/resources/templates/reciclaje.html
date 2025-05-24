@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reciclaje Inteligente - Escaneo</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    
+    <style>
+        body {
+            background-color: #f0f8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+        }
+        .scan-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .scanner-view {
+            width: 100%;
+            margin: 0 auto;
+            border: 3px solid #28a745;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 300px;
+            position: relative;
+        }
+        #qr-scanner, #barcode-scanner {
+            width: 100%;
+            height: 100%;
+        }
+        .scanner-placeholder {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+        .scan-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .scan-option-btn {
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .scan-option-btn.active {
+            background-color: #2e7d32;
+            color: white;
+            border-color: #2e7d32;
+        }
+        .scan-option-btn:not(.active) {
+            background-color: white;
+            color: #2e7d32;
+            border-color: #2e7d32;
+        }
+        .scan-option-btn:not(.active):hover {
+            background-color: #e8f5e9;
+        }
+        .result-card {
+            display: none;
+            margin-top: 20px;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .material-info {
+            background-color: #e8f5e9;
+            border-left: 4px solid #2e7d32;
+            padding: 15px;
+            border-radius: 0 5px 5px 0;
+        }
+        .points-badge {
+            font-size: 1.2rem;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+        }
+        .btn-scan {
+            background-color: #2e7d32;
+            color: white;
+            font-weight: bold;
+            padding: 10px 25px;
+            border-radius: 30px;
+            border: none;
+            transition: all 0.3s;
+        }
+        .btn-scan:hover {
+            background-color: #1b5e20;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .status-indicator {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .status-active {
+            background-color: #4CAF50;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+<a th:href="@{/dashboard}" class="btn btn-outline-secondary back-button">
+    <i class="fas fa-arrow-left"></i> Regresar
+</a>
+
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h2 class="text-success"><i class="fas fa-recycle"></i> Reciclaje Inteligente</h2>
+        <p class="text-muted">Escanea tu material reciclable para ganar puntos</p>
+    </div>
+    
+    <div class="scan-options">
+        <button id="qrOption" class="scan-option-btn active">
+            <i class="fas fa-qrcode"></i> Escanear QR
+        </button>
+        <button id="barcodeOption" class="scan-option-btn">
+            <i class="fas fa-barcode"></i> Escanear Código de Barras
+        </button>
+    </div>
+    
+    <div class="scan-container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0"><span class="status-indicator status-active"></span> Escáner activo</h4>
+            <span class="badge bg-secondary">Beta</span>
+        </div>
+        
+        <div class="scanner-view">
+            <div id="qr-scanner"></div>
+            <div id="barcode-scanner" style="display: none;">
+                <div class="scanner-placeholder">
+                    <p>Preparando escáner de códigos de barras...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-3">
+            <button id="toggleCamera" class="btn btn-outline-success btn-sm">
+                <i class="fas fa-camera"></i> Cambiar cámara
+            </button>
+        </div>
+        
+        <div class="alert alert-info mt-3" role="alert">
+            <i class="fas fa-info-circle"></i> Coloca el código frente a la cámara. Asegúrate de que esté bien iluminado.
+        </div>
+    </div>
+    
+    <div id="resultCard" class="result-card scan-container">
+        <h4 class="mb-3"><i class="fas fa-check-circle text-success"></i> Material identificado</h4>
+        
+        <div class="material-info mb-3">
+            <h5 id="materialName">Cargando información...</h5>
+            <p id="materialDescription" class="mb-1"></p>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-muted">Puntos obtenidos:</span>
+                <span id="pointsEarned" class="points-badge badge ms-2">+10</span>
+            </div>
+            <div id="confirmationButtons" class="d-none">
+                <button id="confirmBtn" class="btn btn-success btn-sm">
+                    <i class="fas fa-check"></i> Confirmar
+                </button>
+                <button id="cancelBtn" class="btn btn-outline-danger btn-sm ms-2">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loadingSpinner" class="text-center mt-4 d-none">
+        <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2">Procesando material reciclable...</p>
+    </div>
+    
+    <div id="successMessage" class="alert alert-success mt-3 d-none" role="alert">
+        <i class="fas fa-check-circle"></i> ¡Reciclaje registrado con éxito! Tus puntos han sido actualizados.
+    </div>
+</div>
+
+<script>
+    // Elementos del DOM
+    const resultCard = document.getElementById('resultCard');
+    const materialName = document.getElementById('materialName');
+    const materialDescription = document.getElementById('materialDescription');
+    const pointsEarned = document.getElementById('pointsEarned');
+    const confirmationButtons = document.getElementById('confirmationButtons');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const successMessage = document.getElementById('successMessage');
+    const toggleCameraBtn = document.getElementById('toggleCamera');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const qrOption = document.getElementById('qrOption');
+    const barcodeOption = document.getElementById('barcodeOption');
+    const qrScannerElement = document.getElementById('qr-scanner');
+    const barcodeScannerElement = document.getElementById('barcode-scanner');
+    
+    // Simulación de base de datos de materiales
+    const materialDatabase = {
+        'PET001': {
+            name: 'Botella PET (500ml)',
+            description: 'Botella de plástico transparente. Por favor, aplástala antes de reciclar.',
+            points: 5
+        },
+        '13': {
+            name: 'Botella PET (500ml)',
+            description: 'Botella de plástico transparente. Por favor, aplástala antes de reciclar.',
+            points: 5
+        },
+        'ALUM002': {
+            name: 'Lata de aluminio',
+            description: 'Lata de bebida. Enjuágala antes de reciclar.',
+            points: 8
+        },
+        'PAP003': {
+            name: 'Papel mixto (1kg)',
+            description: 'Papel de oficina, periódicos y revistas. Sin plástico o grapas.',
+            points: 10
+        },
+        'VID004': {
+            name: 'Botella de vidrio verde',
+            description: 'Botella de vidrio color verde. Retira la tapa metálica.',
+            points: 7
+        },
+        '7891234567890': {
+            name: 'Botella de agua 1L',
+            description: 'Botella de plástico con código EAN-13',
+            points: 6
+        },
+        '12345678': {
+            name: 'Lata de refresco',
+            description: 'Lata de aluminio con código EAN-8',
+            points: 8
+        }
+    };
+    
+    // Estado de la aplicación
+    let currentCamera = 'environment'; // 'environment' (trasera) o 'user' (frontal)
+    let html5QrCode;
+    let quaggaInitialized = false;
+    let lastScannedCode = null;
+    let currentScanner = 'qr'; // 'qr' o 'barcode'
+    
+    // Inicializar el escáner QR
+    function initQRScanner() {
+        if (html5QrCode) {
+            html5QrCode.resume();
+            return;
+        }
+        
+        html5QrCode = new Html5Qrcode("qr-scanner");
+        
+        const config = { 
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+        };
+        
+        html5QrCode.start(
+            { facingMode: currentCamera },
+            config,
+            onScanSuccess,
+            onScanError
+        ).catch(err => {
+            console.error("Error al iniciar el escáner QR:", err);
+            alert("No se pudo acceder a la cámara. Por favor, asegúrate de haber dado los permisos necesarios.");
+        });
+    }
+    
+    // Inicializar el escáner de códigos de barras
+    function initBarcodeScanner() {
+        if (quaggaInitialized) {
+            Quagga.start();
+            return;
+        }
+        
+        Quagga.init({
+            inputStream: {
+                type: "LiveStream",
+                target: barcodeScannerElement,
+                constraints: {
+                    facingMode: currentCamera,
+                    width: { min: 640 },
+                    height: { min: 480 },
+                    aspectRatio: { min: 1, max: 2 }
+                },
+            },
+            decoder: {
+                readers: [
+                    "code_128_reader",
+                    "ean_reader",
+                    "ean_8_reader",
+                    "code_39_reader",
+                    "upc_reader",
+                ]
+            },
+            locator: {
+                patchSize: "medium",
+                halfSample: true
+            },
+            locate: true,
+            frequency: 10
+        }, function(err) {
+            if (err) {
+                console.error("Error al iniciar Quagga:", err);
+                alert("No se pudo iniciar el escáner de códigos de barras.");
+                return;
+            }
+            quaggaInitialized = true;
+            Quagga.start();
+            
+            // Actualizar el placeholder
+            const placeholder = barcodeScannerElement.querySelector('.scanner-placeholder');
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+        });
+        
+        Quagga.onDetected(function(data) {
+            const code = data.codeResult.code;
+            console.log(`Código de barras detectado: ${code}`);
+            handleDetectedCode(code);
+        });
+    }
+    
+    // Función para cambiar entre escáneres
+    function toggleScanner(type) {
+        if (type === currentScanner) return;
+        
+        // Detener el escáner actual
+        if (currentScanner === 'qr') {
+            if (html5QrCode) {
+                html5QrCode.pause();
+            }
+        } else {
+            if (quaggaInitialized) {
+                Quagga.stop();
+            }
+        }
+        
+        // Actualizar la interfaz
+        qrOption.classList.toggle('active', type === 'qr');
+        barcodeOption.classList.toggle('active', type === 'barcode');
+        qrScannerElement.style.display = type === 'qr' ? 'block' : 'none';
+        barcodeScannerElement.style.display = type === 'barcode' ? 'block' : 'none';
+        
+        // Actualizar el estado
+        currentScanner = type;
+        
+        // Iniciar el nuevo escáner
+        if (type === 'qr') {
+            initQRScanner();
+        } else {
+            initBarcodeScanner();
+        }
+    }
+    
+    // Función cuando se detecta un código (QR o barras)
+    function onScanSuccess(decodedText, decodedResult) {
+        console.log(`Código detectado: ${decodedText}`);
+        handleDetectedCode(decodedText);
+    }
+    
+    // Función para manejar el código detectado
+function handleDetectedCode(code) {
+    if (code === lastScannedCode) return;
+    
+    lastScannedCode = code;
+    
+    // Detener temporalmente el escáner
+    if (currentScanner === 'qr') {
+        html5QrCode.pause();
+    } else {
+        Quagga.stop();
+    }
+    
+    // Mostrar información del material
+    displayMaterialInfo(code);
+}
+    // Función para mostrar la información del material
+    function displayMaterialInfo(code) {
+        // Mostrar la tarjeta de resultados
+        resultCard.style.display = 'block';
+        
+        // Buscar en la base de datos
+        const material = materialDatabase[code];
+        
+        if (material) {
+            materialName.textContent = material.name;
+            materialDescription.textContent = material.description;
+            pointsEarned.textContent = `+${material.points}`;
+        } else {
+            materialName.textContent = "Material no reconocido";
+            materialDescription.textContent = "Este código no está registrado en nuestro sistema. Por favor, verifica el código o utiliza otro material.";
+            pointsEarned.textContent = "+0";
+        }
+        
+        // Mostrar botones de confirmación
+        confirmationButtons.classList.remove('d-none');
+    }
+    
+    // Función para manejar errores del escáner
+    function onScanError(errorMessage) {
+        console.log("Error en el escáner:", errorMessage);
+    }
+    
+    // Función para cambiar de cámara
+    async function toggleCamera() {
+        try {
+            // Detener los escáneres
+            if (currentScanner === 'qr' && html5QrCode) {
+                await html5QrCode.stop();
+            } else if (quaggaInitialized) {
+                Quagga.stop();
+            }
+            
+            // Cambiar a la otra cámara
+            currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+            
+            // Reiniciar el escáner actual
+            if (currentScanner === 'qr') {
+                initQRScanner();
+            } else {
+                initBarcodeScanner();
+            }
+            
+            // Actualizar el texto del botón
+            const cameraName = currentCamera === 'environment' ? 'Trasera' : 'Frontal';
+            toggleCameraBtn.innerHTML = `<i class="fas fa-camera"></i> Cámara ${cameraName}`;
+            
+        } catch (err) {
+            console.error("Error al cambiar de cámara:", err);
+            alert("No se pudo cambiar la cámara. Intenta de nuevo.");
+        }
+    }
+    
+    // Función para confirmar el reciclaje
+async function confirmRecycling() {
+    // Mostrar spinner de carga
+    loadingSpinner.classList.remove('d-none');
+    resultCard.style.display = 'none';
+    confirmationButtons.classList.add('d-none');
+    
+    try {
+        let endpoint, payload;
+        
+        if (currentScanner === 'qr') {
+            endpoint = '/api/reciclajes/scan-qr';
+            payload = {
+                codigo: lastScannedCode,
+                cantidad: 1 // Puedes añadir un selector de cantidad si lo necesitas
+            };
+        } else {
+            endpoint = '/api/reciclajes/scan-barcode';
+            payload = {
+                codigo: lastScannedCode,
+                packaging: 'standard' // Puedes personalizar esto según tus necesidades
+            };
+        }
+        
+        console.log("Body enviado:", JSON.stringify(payload, null, 2));
+        
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Spring Security agregará automáticamente el CSRF token si está configurado
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload),
+            credentials: 'include' // Para incluir cookies de sesión
+        });
+        
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al registrar el reciclaje');
+        	alert("post",response);
+        }
+        
+        const reciclaje = await response.json();
+        
+        // Mostrar mensaje de éxito con los puntos obtenidos
+        successMessage.innerHTML = `
+            <i class="fas fa-check-circle"></i> 
+            ¡Reciclaje registrado con éxito! Has obtenido ${reciclaje.puntosObtenidos || 'X'} puntos.
+        `;
+        loadingSpinner.classList.add('d-none');
+        successMessage.classList.remove('d-none');
+        
+        // Reiniciar el escáner después de 3 segundos
+        setTimeout(() => {
+            successMessage.classList.add('d-none');
+            lastScannedCode = null;
+            
+            if (currentScanner === 'qr') {
+                html5QrCode.resume();
+            } else if (quaggaInitialized) {
+                Quagga.start();
+            }
+        }, 3000);
+        
+    } catch (err) {
+        console.error("Error al registrar reciclaje:", err);
+        loadingSpinner.classList.add('d-none');
+        resultCard.style.display = 'block';
+        confirmationButtons.classList.remove('d-none');
+        
+        // Mostrar mensaje de error
+        materialName.textContent = "Error al registrar";
+        materialDescription.textContent = err.message || "Ocurrió un error al registrar tu reciclaje. Intenta de nuevo.";
+        pointsEarned.textContent = "+0";
+    }
+}
+
+    // Función para cancelar el escaneo
+    function cancelScan() {
+        resultCard.style.display = 'none';
+        confirmationButtons.classList.add('d-none');
+        lastScannedCode = null;
+        
+        if (currentScanner === 'qr') {
+            html5QrCode.resume();
+        } else if (quaggaInitialized) {
+            Quagga.start();
+        }
+    }
+    
+    // Event listeners
+    toggleCameraBtn.addEventListener('click', toggleCamera);
+    confirmBtn.addEventListener('click', confirmRecycling);
+    cancelBtn.addEventListener('click', cancelScan);
+    qrOption.addEventListener('click', () => toggleScanner('qr'));
+    barcodeOption.addEventListener('click', () => toggleScanner('barcode'));
+    
+    // Iniciar la aplicación cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', () => {
+        initQRScanner();
+    });
+</script>
+</body>
+</html>

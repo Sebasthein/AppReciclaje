@@ -6,10 +6,12 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID; // Importar UUID para generar semillas únicas si es necesario
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.example.reciclaje.entidades.Logro;
 import com.example.reciclaje.entidades.Nivel;
 import com.example.reciclaje.entidades.Rol;
 import com.example.reciclaje.entidades.Usuario;
@@ -32,6 +34,9 @@ public class UsuarioServicio {
     private final NivelRepositorio nivelRepository;
     private final PasswordEncoder passwordEncoder;
     private final RolRepositorio rolRepositorio;
+ 
+    private final NivelServicio nivelServicio;
+    
 
     // Lista de emails que tendrán rol ADMIN (podría moverse a application.properties)
     private static final Set<String> ADMIN_EMAILS = Set.of(
@@ -256,4 +261,17 @@ public class UsuarioServicio {
     public void actualizarUsuario(Usuario usuario) {
         usuarioRepository.save(usuario);
     }
+    
+    void verificarYAsignarLogros(Usuario usuario) {
+        Nivel nuevoNivel = nivelServicio.obtenerNivelPorPuntos(usuario.getPuntos());
+
+        if (!nuevoNivel.equals(usuario.getNivel())) {
+            usuario.setNivel(nuevoNivel);
+
+            Logro logro = nuevoNivel.getLogro();
+            if (logro != null && !usuario.getLogros().contains(logro)) {
+                usuario.getLogros().add(logro);
+            }
+        }
+    } 
 }
