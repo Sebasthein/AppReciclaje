@@ -181,21 +181,27 @@
         <div class="material-info mb-3">
             <h5 id="materialName">Cargando información...</h5>
             <p id="materialDescription" class="mb-1"></p>
+            <p><span class="text-muted">Categoría:</span> <span id="materialCategory"></span></p>
         </div>
-        
-        <div class="d-flex justify-content-between align-items-center">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="form-group mb-0">
+                <label for="materialQuantity" class="form-label text-muted">Cantidad:</label>
+                <input type="number" id="materialQuantity" class="form-control" value="1" min="1" style="width: 80px; display: inline-block;">
+            </div>
             <div>
-                <span class="text-muted">Puntos obtenidos:</span>
+                <span class="text-muted">Puntos totales:</span>
                 <span id="pointsEarned" class="points-badge badge ms-2">+10</span>
             </div>
-            <div id="confirmationButtons" class="d-none">
-                <button id="confirmBtn" class="btn btn-success btn-sm">
-                    <i class="fas fa-check"></i> Confirmar
-                </button>
-                <button id="cancelBtn" class="btn btn-outline-danger btn-sm ms-2">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-            </div>
+        </div>
+        
+        <div id="confirmationButtons" class="d-none text-end">
+            <button id="confirmBtn" class="btn btn-success btn-sm">
+                <i class="fas fa-check"></i> Confirmar
+            </button>
+            <button id="cancelBtn" class="btn btn-outline-danger btn-sm ms-2">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
         </div>
     </div>
     
@@ -207,7 +213,10 @@
     </div>
     
     <div id="successMessage" class="alert alert-success mt-3 d-none" role="alert">
-        <i class="fas fa-check-circle"></i> ¡Reciclaje registrado con éxito! Tus puntos han sido actualizados.
+        <i class="fas fa-check-circle"></i> ¡Material registrado con éxito!
+    </div>
+     <div id="errorMessage" class="alert alert-danger mt-3 d-none" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> Hubo un error al registrar el material.
     </div>
 </div>
 
@@ -216,10 +225,13 @@
     const resultCard = document.getElementById('resultCard');
     const materialName = document.getElementById('materialName');
     const materialDescription = document.getElementById('materialDescription');
+    const materialCategory = document.getElementById('materialCategory'); // Nuevo elemento
+    const materialQuantityInput = document.getElementById('materialQuantity'); // Nuevo
     const pointsEarned = document.getElementById('pointsEarned');
     const confirmationButtons = document.getElementById('confirmationButtons');
     const loadingSpinner = document.getElementById('loadingSpinner');
     const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage'); // Nuevo elemento de mensaje de error
     const toggleCameraBtn = document.getElementById('toggleCamera');
     const confirmBtn = document.getElementById('confirmBtn');
     const cancelBtn = document.getElementById('cancelBtn');
@@ -228,42 +240,51 @@
     const qrScannerElement = document.getElementById('qr-scanner');
     const barcodeScannerElement = document.getElementById('barcode-scanner');
     
-    // Simulación de base de datos de materiales
+    // Simulación de base de datos de materiales (para propósitos de prueba locales)
+    // Estos datos ahora coinciden con la estructura JSON que tu backend espera para crear un material
     const materialDatabase = {
         'PET001': {
-            name: 'Botella PET (500ml)',
-            description: 'Botella de plástico transparente. Por favor, aplástala antes de reciclar.',
-            points: 5
-        },
-        '13': {
-            name: 'Botella PET (500ml)',
-            description: 'Botella de plástico transparente. Por favor, aplástala antes de reciclar.',
-            points: 5
+            nombre: 'Botella PET 500ml',
+            categoria: 'Plástico',
+            puntosPorUnidad: 5,
+            descripcion: 'Botella de plástico transparente. Aplastar antes de reciclar.',
+            reciclable: true
         },
         'ALUM002': {
-            name: 'Lata de aluminio',
-            description: 'Lata de bebida. Enjuágala antes de reciclar.',
-            points: 8
+            nombre: 'Lata de aluminio',
+            categoria: 'Metal',
+            puntosPorUnidad: 8,
+            descripcion: 'Lata de bebida. Enjuágala antes de reciclar.',
+            reciclable: true
         },
         'PAP003': {
-            name: 'Papel mixto (1kg)',
-            description: 'Papel de oficina, periódicos y revistas. Sin plástico o grapas.',
-            points: 10
+            nombre: 'Cartón Corrugado (caja)',
+            categoria: 'Papel',
+            puntosPorUnidad: 10,
+            descripcion: 'Cartón para empaque. Retirar cintas y etiquetas.',
+            reciclable: true
         },
         'VID004': {
-            name: 'Botella de vidrio verde',
-            description: 'Botella de vidrio color verde. Retira la tapa metálica.',
-            points: 7
+            nombre: 'Botella de vidrio verde',
+            categoria: 'Vidrio',
+            puntosPorUnidad: 7,
+            descripcion: 'Botella de vidrio color verde. Retira la tapa metálica.',
+            reciclable: true
         },
-        '7891234567890': {
-            name: 'Botella de agua 1L',
-            description: 'Botella de plástico con código EAN-13',
-            points: 6
+        // Ejemplos de códigos de barras (pueden ser numéricos)
+        '7891234567890': { // Código EAN-13
+            nombre: 'Botella de agua 1L (EAN)',
+            categoria: 'Plástico',
+            puntosPorUnidad: 6,
+            descripcion: 'Botella de agua con código de barras estándar.',
+            reciclable: true
         },
-        '12345678': {
-            name: 'Lata de refresco',
-            description: 'Lata de aluminio con código EAN-8',
-            points: 8
+        '12345678': { // Código EAN-8
+            nombre: 'Lata de refresco (EAN-8)',
+            categoria: 'Metal',
+            puntosPorUnidad: 8,
+            descripcion: 'Lata pequeña de refresco.',
+            reciclable: true
         }
     };
     
@@ -273,6 +294,7 @@
     let quaggaInitialized = false;
     let lastScannedCode = null;
     let currentScanner = 'qr'; // 'qr' o 'barcode'
+    let lastScannedMaterialData = null; // Para guardar los datos del material escaneado
     
     // Inicializar el escáner QR
     function initQRScanner() {
@@ -389,51 +411,100 @@
     
     // Función cuando se detecta un código (QR o barras)
     function onScanSuccess(decodedText, decodedResult) {
-        console.log(`Código detectado: ${decodedText}`);
+        console.log(`Código QR detectado: ${decodedText}`);
         handleDetectedCode(decodedText);
     }
     
     // Función para manejar el código detectado
-function handleDetectedCode(code) {
-    if (code === lastScannedCode) return;
-    
-    lastScannedCode = code;
-    
-    // Detener temporalmente el escáner
-    if (currentScanner === 'qr') {
-        html5QrCode.pause();
-    } else {
-        Quagga.stop();
+    function handleDetectedCode(code) {
+        // Simple debounce para evitar múltiples detecciones rápidas del mismo código
+        if (code === lastScannedCode) return;
+        
+        lastScannedCode = code;
+        
+        // Detener temporalmente el escáner
+        if (currentScanner === 'qr' && html5QrCode) {
+            html5QrCode.pause();
+        } else if (currentScanner === 'barcode' && quaggaInitialized) {
+            Quagga.stop();
+        }
+        
+        // Asumiendo que el código QR/Barras contiene JSON o es una clave para materialDatabase
+        let material = null;
+        try {
+            // Intentar parsear como JSON si es un QR
+            if (currentScanner === 'qr') {
+                const parsedJson = JSON.parse(code);
+                // Validar que el JSON tiene la estructura esperada para un material
+                if (parsedJson.nombre && parsedJson.categoria && parsedJson.puntosPorUnidad) {
+                    material = parsedJson;
+                    // Asegúrate de que tenga codigoBarra si lo espera tu backend
+                    if (!material.codigoBarra) {
+                        material.codigoBarra = code; // Usar el código QR completo como código de barras si no se proporciona
+                    }
+                }
+            }
+        } catch (e) {
+            console.log("El código no es un JSON válido, buscando en base de datos local.");
+        }
+
+        // Si no se pudo parsear como JSON o no era un QR, buscar en la base de datos local simulada
+        if (!material) {
+            material = materialDatabase[code];
+             // Si el material viene de la base de datos simulada, asegúrate de que tenga codigoBarra
+            if (material && !material.codigoBarra) {
+                material.codigoBarra = code; // Usar el código escaneado como codigoBarra
+            }
+        }
+
+        if (material) {
+            lastScannedMaterialData = material; // Guardar los datos para el envío
+            displayMaterialInfo(material);
+        } else {
+            // Material no encontrado o QR no válido
+            materialName.textContent = "Material no reconocido";
+            materialDescription.textContent = "Este código no está registrado en nuestro sistema o el formato es inválido. Por favor, verifica el código o utiliza otro material.";
+            materialCategory.textContent = "";
+            pointsEarned.textContent = "+0";
+            confirmationButtons.classList.remove('d-none'); // Aún mostrar botones para que el usuario pueda cancelar
+            resultCard.style.display = 'block';
+            lastScannedMaterialData = null; // Resetear datos si no se reconoce
+        }
     }
     
-    // Mostrar información del material
-    displayMaterialInfo(code);
-}
     // Función para mostrar la información del material
-    function displayMaterialInfo(code) {
+    function displayMaterialInfo(material) {
         // Mostrar la tarjeta de resultados
         resultCard.style.display = 'block';
         
-        // Buscar en la base de datos
-        const material = materialDatabase[code];
+        materialName.textContent = material.nombre;
+        materialDescription.textContent = material.descripcion;
+        materialCategory.textContent = material.categoria;
         
-        if (material) {
-            materialName.textContent = material.name;
-            materialDescription.textContent = material.description;
-            pointsEarned.textContent = `+${material.points}`;
-        } else {
-            materialName.textContent = "Material no reconocido";
-            materialDescription.textContent = "Este código no está registrado en nuestro sistema. Por favor, verifica el código o utiliza otro material.";
-            pointsEarned.textContent = "+0";
-        }
-        
+        // Set default quantity to 1 and update total points
+        materialQuantityInput.value = 1;
+        updateTotalPoints();
+
         // Mostrar botones de confirmación
         confirmationButtons.classList.remove('d-none');
     }
+
+    // Function to update total points based on quantity
+    function updateTotalPoints() {
+        if (lastScannedMaterialData) {
+            const quantity = parseInt(materialQuantityInput.value);
+            const pointsPerUnit = lastScannedMaterialData.puntosPorUnidad;
+            const totalPoints = pointsPerUnit * quantity;
+            pointsEarned.textContent = `+${totalPoints}`;
+        }
+    }
+
+    // Add event listener for quantity input
+    materialQuantityInput.addEventListener('input', updateTotalPoints);
     
     // Función para manejar errores del escáner
     function onScanError(errorMessage) {
-        console.log("Error en el escáner:", errorMessage);
+        // console.log("Error en el escáner:", errorMessage); // Demasiado ruidoso, comentar en producción
     }
     
     // Función para cambiar de cámara
@@ -442,7 +513,7 @@ function handleDetectedCode(code) {
             // Detener los escáneres
             if (currentScanner === 'qr' && html5QrCode) {
                 await html5QrCode.stop();
-            } else if (quaggaInitialized) {
+            } else if (currentScanner === 'barcode' && quaggaInitialized) {
                 Quagga.stop();
             }
             
@@ -467,90 +538,100 @@ function handleDetectedCode(code) {
     }
     
     // Función para confirmar el reciclaje
-async function confirmRecycling() {
-    // Mostrar spinner de carga
-    loadingSpinner.classList.remove('d-none');
-    resultCard.style.display = 'none';
-    confirmationButtons.classList.add('d-none');
-    
-    try {
-        let endpoint, payload;
-        
-        if (currentScanner === 'qr') {
-            endpoint = '/api/reciclajes/scan-qr';
-            payload = {
-                codigo: lastScannedCode,
-                cantidad: 1 // Puedes añadir un selector de cantidad si lo necesitas
-            };
-        } else {
-            endpoint = '/api/reciclajes/scan-barcode';
-            payload = {
-                codigo: lastScannedCode,
-                packaging: 'standard' // Puedes personalizar esto según tus necesidades
-            };
+    async function confirmRecycling() {
+        if (!lastScannedMaterialData) {
+            alert("No hay datos de material para registrar.");
+            return;
         }
-        
-        console.log("Body enviado:", JSON.stringify(payload, null, 2));
-        
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // Spring Security agregará automáticamente el CSRF token si está configurado
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(payload),
-            credentials: 'include' // Para incluir cookies de sesión
-        });
-        
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Error al registrar el reciclaje');
-        	alert("post",response);
+
+        const quantity = parseInt(materialQuantityInput.value);
+        if (isNaN(quantity) || quantity < 1) {
+            alert("Por favor, introduce una cantidad válida (mínimo 1).");
+            return;
         }
+
+        // Limpiar mensajes anteriores
+        successMessage.classList.add('d-none');
+        errorMessage.classList.add('d-none');
+
+        // Mostrar spinner de carga
+        loadingSpinner.classList.remove('d-none');
+        resultCard.style.display = 'none';
+        confirmationButtons.classList.add('d-none');
         
-        const reciclaje = await response.json();
-        
-        // Mostrar mensaje de éxito con los puntos obtenidos
-        successMessage.innerHTML = `
-            <i class="fas fa-check-circle"></i> 
-            ¡Reciclaje registrado con éxito! Has obtenido ${reciclaje.puntosObtenidos || 'X'} puntos.
-        `;
-        loadingSpinner.classList.add('d-none');
-        successMessage.classList.remove('d-none');
-        
-        // Reiniciar el escáner después de 3 segundos
-        setTimeout(() => {
-            successMessage.classList.add('d-none');
-            lastScannedCode = null;
+        try {
+            // El endpoint para crear un NUEVO material desde QR/Código de Barras
+            const endpoint = '/api/materiales/crear-desde-qr'; 
             
-            if (currentScanner === 'qr') {
-                html5QrCode.resume();
-            } else if (quaggaInitialized) {
-                Quagga.start();
+            // Construir el payload con la estructura JSON esperada por tu backend
+            const payload = {
+                qrData: JSON.stringify(lastScannedMaterialData), // Tu backend espera un String de JSON dentro de 'qrData'
+                quantity: quantity // Add the quantity here
+            };
+            
+            console.log("Enviando a la API:", payload);
+            
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Spring Security agregará automáticamente el CSRF token si está configurado
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include' // Para incluir cookies de sesión (importante para Spring Security)
+            });
+            
+            const responseData = await response.json(); // Leer la respuesta como JSON
+            
+            if (!response.ok) {
+                // Si la respuesta no es 2xx OK, significa un error HTTP
+                throw new Error(responseData.message || responseData.error || 'Error desconocido al registrar el material');
             }
-        }, 3000);
-        
-    } catch (err) {
-        console.error("Error al registrar reciclaje:", err);
-        loadingSpinner.classList.add('d-none');
-        resultCard.style.display = 'block';
-        confirmationButtons.classList.remove('d-none');
-        
-        // Mostrar mensaje de error
-        materialName.textContent = "Error al registrar";
-        materialDescription.textContent = err.message || "Ocurrió un error al registrar tu reciclaje. Intenta de nuevo.";
-        pointsEarned.textContent = "+0";
+            
+            // Si la respuesta es exitosa
+            successMessage.innerHTML = `
+                <i class="fas fa-check-circle"></i> 
+                ¡Material "${responseData.material.nombre}" (${quantity} unidades) registrado con éxito! Ganaste ${responseData.pointsEarned} puntos.
+            `;
+            loadingSpinner.classList.add('d-none');
+            successMessage.classList.remove('d-none');
+            
+        } catch (err) {
+            console.error("Error al registrar material:", err);
+            loadingSpinner.classList.add('d-none');
+            errorMessage.textContent = err.message || "Ocurrió un error al registrar tu material. Intenta de nuevo.";
+            errorMessage.classList.remove('d-none');
+            resultCard.style.display = 'block'; // Volver a mostrar la tarjeta de resultados con el error
+            confirmationButtons.classList.remove('d-none');
+        } finally {
+            // Reiniciar el escáner después de un tiempo (independientemente del éxito o fracaso)
+            setTimeout(() => {
+                successMessage.classList.add('d-none');
+                errorMessage.classList.add('d-none');
+                lastScannedCode = null;
+                lastScannedMaterialData = null;
+                
+                if (currentScanner === 'qr') {
+                    initQRScanner();
+                } else if (quaggaInitialized) {
+                    Quagga.start();
+                }
+            }, 5000); // Dar más tiempo para leer el mensaje
+        }
     }
-}
 
     // Función para cancelar el escaneo
     function cancelScan() {
         resultCard.style.display = 'none';
         confirmationButtons.classList.add('d-none');
         lastScannedCode = null;
+        lastScannedMaterialData = null;
         
+        // Limpiar cualquier mensaje de éxito/error anterior
+        successMessage.classList.add('d-none');
+        errorMessage.classList.add('d-none');
+
         if (currentScanner === 'qr') {
             html5QrCode.resume();
         } else if (quaggaInitialized) {

@@ -1,10 +1,13 @@
 package com.example.reciclaje.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,14 +25,12 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/materiales")
-
+@RequiredArgsConstructor
 public class MaterialController {
 
 	private final MaterialServicio materialService;
 
-    public MaterialController(MaterialServicio materialService) {
-        this.materialService = materialService;
-    }
+    // Constructor explícito eliminado gracias a @RequiredArgsConstructor
 
     @GetMapping
     public ResponseEntity<List<Material>> listarMateriales() {
@@ -61,5 +62,35 @@ public class MaterialController {
             @PathVariable Long id,
             @RequestBody Material material) {
         return ResponseEntity.ok(materialService.actualizarMaterial(id, material));
+    }
+    
+    @PostMapping("/crear-desde-qr")
+    public ResponseEntity<Map<String, Object>> crearMaterialDesdeQR( // Mejor tipado para la respuesta
+            @RequestBody Map<String, String> request,
+            @AuthenticationPrincipal UserDetails userDetails) { // userDetails no se usa directamente aquí
+        
+        try {
+            String qrData = request.get("qrData");
+            Material material = materialService.crearMaterialDesdeQR(qrData);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Material creado exitosamente",
+                "material", material
+            ));
+            
+        } catch (IllegalArgumentException e) { // Capturar excepciones más específicas si es posible
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "error", "Datos de QR inválidos",
+                "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of( // Usar INTERNAL_SERVER_ERROR para errores inesperados
+                "success", false,
+                "error", "Error interno del servidor",
+                "message", e.getMessage()
+            ));
+        }
     }
 }

@@ -7,6 +7,5 @@ import lombok.Setter;
 @Setter
 public class ReciclajeDTO {
 
-	private Long usuarioId;
-    private String descripcion;
+	
 }

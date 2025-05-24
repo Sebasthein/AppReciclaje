@@ -13,16 +13,17 @@ import com.example.reciclaje.entidades.Reciclaje;
 import com.example.reciclaje.seguridad.CustomUserDetails;
 import com.example.reciclaje.servicio.ReciclajeServicio;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/reciclajes")
 @PreAuthorize("isAuthenticated()")
+@RequiredArgsConstructor
 public class ReciclajeController {
 
-    private final ReciclajeServicio reciclajeService;
+	private final ReciclajeServicio reciclajeService;
 
-    public ReciclajeController(ReciclajeServicio reciclajeService) {
-        this.reciclajeService = reciclajeService;
-    }
+    // Constructor explícito eliminado gracias a @RequiredArgsConstructor
 
     @PostMapping("/registrar")
     public ResponseEntity<?> registrarReciclaje(
@@ -37,6 +38,7 @@ public class ReciclajeController {
             Reciclaje reciclaje = reciclajeService.registrarReciclaje(usuarioId, materialId, cantidad);
             return ResponseEntity.status(HttpStatus.CREATED).body(reciclaje);
         } catch (Exception e) {
+            // Podrías crear excepciones personalizadas en el servicio
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of(
                         "error", "Error al registrar el reciclaje",
@@ -51,8 +53,9 @@ public class ReciclajeController {
             List<Reciclaje> lista = reciclajeService.obtenerReciclajesPorUsuario(usuarioId);
             return ResponseEntity.ok(lista);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "No se encontraron reciclajes para el usuario"));
+            // Considera devolver 404 solo si no se encuentra el usuario/data específica
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR) // Cambiado a INTERNAL_SERVER_ERROR
+                    .body(Map.of("error", "Error al obtener reciclajes para el usuario", "details", e.getMessage()));
         }
     }
 
@@ -63,8 +66,8 @@ public class ReciclajeController {
             List<Reciclaje> lista = reciclajeService.obtenerReciclajesPorUsuario(userDetails.getId());
             return ResponseEntity.ok(lista);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Error al obtener tus reciclajes"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR) // Cambiado a INTERNAL_SERVER_ERROR
+                    .body(Map.of("error", "Error al obtener tus reciclajes", "details", e.getMessage()));
         }
     }
 
@@ -105,9 +108,13 @@ public class ReciclajeController {
             }
             
             // Opción 2: Si usas códigos directos
+            // ¿Estás seguro de que quieres usar este método si el código no empieza con "MATERIAL_"?
+            // Podrías considerar una lógica más robusta aquí.
             Reciclaje reciclaje = reciclajeService.registrarDesdeCodigo(codigo, userDetails.getId(), null);
             return ResponseEntity.ok(reciclaje);
 
+        } catch (NumberFormatException e) { // Específico para el parseo de cantidad
+            return ResponseEntity.badRequest().body(Map.of("error", "Cantidad no válida", "details", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of(
@@ -154,7 +161,7 @@ public class ReciclajeController {
             return ResponseEntity.ok(reciclajes);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error al obtener todos los reciclajes"));
+                    .body(Map.of("error", "Error al obtener todos los reciclajes", "details", e.getMessage()));
         }
     }
 
@@ -166,7 +173,7 @@ public class ReciclajeController {
             return ResponseEntity.ok(pendientes);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error al obtener reciclajes pendientes"));
+                    .body(Map.of("error", "Error al obtener reciclajes pendientes", "details", e.getMessage()));
         }
     }
 }
