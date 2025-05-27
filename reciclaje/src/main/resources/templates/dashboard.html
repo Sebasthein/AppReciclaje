@@ -624,7 +624,7 @@
                                 <div class="stat-icon">
                                     <i class="fas fa-coins"></i>
                                 </div>
-                                <div class="stat-value" th:text="${usuario.puntos} ?: 100">100</div>
+                                <div class="stat-value" th:text="${usuario.puntos}"></div>
                                 <div class="stat-label">Puntos Acumulados</div>
                             </div>
                         </div>
@@ -648,7 +648,7 @@
                                 <div class="stat-icon">
                                     <i class="fas fa-level-up-alt"></i>
                                 </div>
-                                <div class="stat-value">1</div>
+                                <div class="stat-value" th:text="${usuario.nivel.nombre}">1</div>
                                 <div class="stat-label">Nivel Actual</div>
                             </div>
                         </div>
@@ -672,7 +672,7 @@
                                 <div class="stat-icon">
                                     <i class="fas fa-medal"></i>
                                 </div>
-                                <div class="stat-value">1</div>
+                                <div class="stat-value" th:text="${logros}">1</div>
                                 <div th:href="@{/logros}" class="stat-label">Logros</div>
                             </div>
                         </div>

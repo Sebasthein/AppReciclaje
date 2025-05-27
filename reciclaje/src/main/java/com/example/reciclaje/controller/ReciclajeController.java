@@ -16,6 +16,7 @@ import com.example.reciclaje.repositorio.MaterialRepositorio;
 import com.example.reciclaje.repositorio.UsuarioRepositorio;
 import com.example.reciclaje.seguridad.CustomUserDetails;
 import com.example.reciclaje.servicio.ReciclajeServicio;
+import com.example.reciclaje.servicio.UsuarioServicio;
 import com.example.reciclaje.servicioDTO.MaterialScanResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class ReciclajeController {
 	 private final ReciclajeServicio reciclajeService;
 	    private final MaterialRepositorio materialRepositorio;
 	    private final UsuarioRepositorio usuarioRepositorio;
+	    private final UsuarioServicio usuarioServicio;
 
 	    @PostMapping("/registrar")
 	    public ResponseEntity<?> registrarReciclaje(
@@ -43,6 +45,8 @@ public class ReciclajeController {
 	            }
 	            Long usuarioId = optionalUsuario.get().getId();
 	            Reciclaje reciclaje = reciclajeService.registrarReciclaje(usuarioId, materialId, cantidad, false);
+	            
+	            Usuario user = usuarioServicio.agregarPuntos(usuarioId, reciclaje.getPuntosGanados());
 	            return ResponseEntity.status(HttpStatus.CREATED).body(reciclaje);
 	        } catch (Exception e) {
 	            System.err.println("Error al registrar el reciclaje: " + e.getMessage());

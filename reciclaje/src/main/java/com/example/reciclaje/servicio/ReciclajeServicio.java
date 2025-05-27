@@ -93,6 +93,7 @@ public class ReciclajeServicio {
         
         // Guardar cambios
         usuarioRepository.save(usuario);
+        
     }
     
     

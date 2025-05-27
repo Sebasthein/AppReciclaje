@@ -64,12 +64,13 @@ public class LogroController {
             if (logros.isEmpty()) {
                 logger.debug("No se encontraron logros para el usuario");
             } else {
-                logger.debug("Primer logro: {}", logros.get(0).toString());
+            	logger.debug("Primer logro: {}", logros.get(0).toString());
             }
 
             // Preparar modelo
-            model.addAttribute("logros", logros);
-            model.addAttribute("usuario", usuarioActual.getNombre()); // Añadir nombre de usuario a la vista
+            model.addAttribute("logrosCompletados", logros);
+            //model.addAttribute("logrosString",logros.getFirst().toString());
+            model.addAttribute("usuario", usuarioActual); // Añadir nombre de usuario a la vista
 
             return "logros";
 

@@ -249,6 +249,9 @@ public class UsuarioServicio {
     }
 
     public Usuario findByEmail(String email) {
+    	
+    	
+    	
         return usuarioRepository.findByEmail(email)
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
     }

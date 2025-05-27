@@ -236,11 +236,12 @@
         <!-- Puntos y progreso -->
         <div class="eco-points">
             <div class="point-item">
-                <div class="point-value" th:text="${puntosTotales} + ' pts'">350 pts</div>
+                <div class="point-value" th:text="${usuario.puntos} + ' pts'">350 pts</div>
+				
                 <div class="point-label">Puntos totales</div>
             </div>
             <div class="point-item">
-                <div class="point-value" th:text="${nivelActual}">5</div>
+                <div class="point-value" th:text="${usuario.nivel.nombre}">5</div>
                 <div class="point-label">Nivel</div>
             </div>
             <div class="point-item">
@@ -274,7 +275,7 @@
                         <div class="progress-container">
                             <div class="progress-text">
                                 <span>¡Completado!</span>
-                                <span th:text="${logro.puntos} + ' pts'">50 pts</span>
+                                <span th:text="${logro.puntosRequeridos} + ' pts'">50 pts</span>
                             </div>
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: 100%"></div>
