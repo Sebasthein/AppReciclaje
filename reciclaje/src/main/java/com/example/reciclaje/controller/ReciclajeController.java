@@ -42,7 +42,7 @@ public class ReciclajeController {
 	                return new ResponseEntity<>("Usuario no encontrado o no autorizado.", HttpStatus.UNAUTHORIZED);
 	            }
 	            Long usuarioId = optionalUsuario.get().getId();
-	            Reciclaje reciclaje = reciclajeService.registrarReciclaje(usuarioId, materialId, cantidad);
+	            Reciclaje reciclaje = reciclajeService.registrarReciclaje(usuarioId, materialId, cantidad, false);
 	            return ResponseEntity.status(HttpStatus.CREATED).body(reciclaje);
 	        } catch (Exception e) {
 	            System.err.println("Error al registrar el reciclaje: " + e.getMessage());
@@ -136,7 +136,7 @@ public class ReciclajeController {
 	        }
 	    }
 
-	    @PostMapping("/scan-barcode")
+	 /*   @PostMapping("/scan-barcode")
 	    public ResponseEntity<?> registrarDesdeCodigoBarras(
 	            @RequestBody Map<String, String> payload,
 	            Authentication authentication) {
@@ -165,7 +165,9 @@ public class ReciclajeController {
 	                        "details", e.getMessage()
 	                    ));
 	        }
-	    }
+	    }*/
+	    
+	    
 
 	    @PreAuthorize("hasRole('ADMIN')")
 	    @GetMapping("/todos")

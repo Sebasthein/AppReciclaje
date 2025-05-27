@@ -2,6 +2,7 @@ package com.example.reciclaje.entidades;
 
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -45,7 +46,7 @@ public class Material {
     private String codigoBarra;
 
     // Relación OneToMany con Reciclaje
-    @OneToMany(mappedBy = "material")
+    @OneToMany(mappedBy = "material", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reciclaje> reciclajes;
 
 	

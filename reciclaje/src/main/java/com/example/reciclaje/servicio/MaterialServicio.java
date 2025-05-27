@@ -71,9 +71,10 @@ public class MaterialServicio {
 		}
 
 		// Buscar por codigoBarra antes de guardar para evitar duplicados
-		materialRepository.findByCodigoBarra(material.getCodigoBarra()).ifPresent(m -> {
-			throw new DataIntegrityViolationException("Código de barras ya registrado: " + material.getCodigoBarra());
-		});
+		 List<Material> materialesExistentes = materialRepository.findByCodigoBarra(material.getCodigoBarra());
+		    if (!materialesExistentes.isEmpty()) {
+		        throw new DataIntegrityViolationException("Código de barras ya registrado: " + material.getCodigoBarra());
+		    }
 
 		// Asegurar valores por defecto si no vienen en el request
 		if (material.getPuntosPorUnidad() == null) {
@@ -153,5 +154,23 @@ public class MaterialServicio {
 		} catch (JsonProcessingException e) {
 			throw new IllegalArgumentException("Formato de QR inválido o malformado: " + e.getMessage(), e);
 		}
+	}
+
+	public Material buscarPorCodigo(String codigoBarra) {
+	    if (codigoBarra == null || codigoBarra.isBlank()) {
+	        throw new IllegalArgumentException("El código de barras no puede estar vacío");
+	    }
+
+	    List<Material> materiales = materialRepository.findByCodigoBarra(codigoBarra);
+	    
+	    if (materiales.isEmpty()) {
+	        throw new MaterialNoEncontradoException("Material con código " + codigoBarra + " no encontrado");
+	    }
+	    
+	    if (materiales.size() > 1) {
+	        throw new IllegalStateException("Existen múltiples materiales con el código " + codigoBarra);
+	    }
+	    
+	    return materiales.get(0);
 	}
 }

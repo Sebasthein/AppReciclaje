@@ -28,7 +28,7 @@ public class ReciclajeServicio {
     private final MaterialRepositorio materialRepository; // Usado para buscar/guardar materiales
     private final NivelRepositorio nivelRepository;
     private final UsuarioRepositorio usuarioRepository;
-    private final LogService logService;
+   // private final LogService logService;
     private final LogroServicio logroServicio;
     private final NivelServicio nivelService;
     private final MaterialServicio materialService; // Usado para buscar/crear materiales por tipo/nombre
@@ -37,39 +37,74 @@ public class ReciclajeServicio {
 
     /**
      * Registra un reciclaje usando un ID de material existente.
-     * Los puntos se actualizan solo si el reciclaje se marca como validado inmediatamente.
+     * Si autoValidar es true, los puntos se actualizan inmediatamente.
+     * Si es false, los puntos se actualizarán cuando se llame a validarReciclaje().
      */
     @Transactional
-    public Reciclaje registrarReciclaje(Long usuarioId, Long materialId, int cantidad) {
+    public Reciclaje registrarReciclaje(Long usuarioId, Long materialId, int cantidad, boolean autoValidar) {
+        // Validaciones y obtención de entidades
         Usuario usuario = usuarioService.obtenerUsuario(usuarioId);
         Material material = materialRepository.findById(materialId)
             .orElseThrow(() -> new IllegalArgumentException("Material no encontrado"));
 
-        if (!material.getReciclable()) { // Usar getReciclable() para Boolean
+        if (!material.getReciclable()) {
             throw new IllegalArgumentException("Este material no es reciclable.");
         }
         if (cantidad <= 0) {
             throw new IllegalArgumentException("La cantidad debe ser al menos 1.");
         }
 
+        // Creación del reciclaje
         Reciclaje reciclaje = new Reciclaje();
         reciclaje.setUsuario(usuario);
         reciclaje.setMaterial(material);
         reciclaje.setCantidad(cantidad);
-        reciclaje.setFechaReciclaje(LocalDateTime.now()); // Usar fechaReciclaje
-        reciclaje.setPuntosGanados(material.getPuntosPorUnidad() * cantidad); // Usar puntosGanados
-        reciclaje.setValidado(false); // Por defecto no validado al registrar
+        reciclaje.setFechaReciclaje(LocalDateTime.now());
+        reciclaje.setPuntosGanados(material.getPuntosPorUnidad() * cantidad);
+        reciclaje.setValidado(autoValidar);
+        
+        if (autoValidar) {
+            reciclaje.setFechaValidacion(LocalDateTime.now());
+        }
 
+        // Guardar el reciclaje
         reciclaje = reciclajeRepository.save(reciclaje);
 
-        // Los puntos y nivel/logros solo se actualizan al validar
-        // Si el proceso de registro del escáner es inmediato y confiable, se podría validar aquí.
-        // Pero si la validación es un paso posterior, esta parte debe manejarse en validarReciclaje().
-        // He adaptado esto a que los puntos se actualizan en el método validarReciclaje().
-        // Si tu intención es que se actualicen inmediatamente al escanear, necesitarás llamar a validarReciclaje aquí
-        // o copiar la lógica de actualización de puntos/niveles/logros.
-        
+        // Actualizar puntos si se validó automáticamente
+        if (autoValidar) {
+            actualizarPuntosUsuario(usuario, reciclaje.getPuntosGanados());
+        }
+
         return reciclaje;
+    }
+    
+    /**
+     * Actualiza los puntos del usuario y verifica logros/niveles
+     */
+    private void actualizarPuntosUsuario(Usuario usuario, int puntosGanados) {
+        // Actualizar puntos del usuario
+        usuario.setPuntos(usuario.getPuntos() + puntosGanados);
+        
+        // Verificar si subió de nivel
+        nivelService.verificarNivelUsuario(usuario);
+        
+        // Verificar logros desbloqueados
+        logroServicio.verificarLogrosUsuario(usuario);
+        
+        // Guardar cambios
+        usuarioRepository.save(usuario);
+    }
+    
+    
+    /**
+     * Calcula los puntos acumulados por un usuario (suma de reciclajes validados)
+     */
+    public int getPuntosAcumulados(Long usuarioId) {
+        Usuario usuario = usuarioService.obtenerUsuario(usuarioId);
+        return usuario.getReciclajes().stream()
+                .filter(Reciclaje::isValidado)
+                .mapToInt(Reciclaje::getPuntosGanados)
+                .sum();
     }
 
     /**
@@ -78,7 +113,7 @@ public class ReciclajeServicio {
      * Este método se usaría para la integración con Open Food Facts, no directamente con el frontend del escáner.
      */
     @Transactional
-    public Reciclaje registrarDesdeCodigoOpenFoodFacts(String codigoBarras, Long usuarioId) {
+   /* public Reciclaje registrarDesdeCodigoOpenFoodFacts(String codigoBarras, Long usuarioId) {
         // Paso 1: Buscar el producto en Open Food Facts
         JsonNode productData = openFoodFactsService.getProductByBarcode(codigoBarras);
         
@@ -99,7 +134,7 @@ public class ReciclajeServicio {
         
         // Paso 4: Buscar o crear el material en tu BD por codigoBarra o por nombre/tipo
         // Intentar encontrar por codigoBarra primero para materiales que ya deberían estar registrados
-        Optional<Material> materialPorCodigoBarra = materialRepository.findByCodigoBarra(codigoBarras);
+        List<Material> materialPorCodigoBarra = materialRepository.findByCodigoBarra(codigoBarras);
         Material material;
 
         if (materialPorCodigoBarra.isPresent()) {
@@ -126,7 +161,7 @@ public class ReciclajeServicio {
         
         // Paso 5: Registrar el reciclaje
         return registrarReciclaje(usuarioId, material.getId(), 1); // Asume 1 unidad por defecto
-    }
+    }*/
 
     /**
      * Método auxiliar para determinar el tipo de material del packaging.
@@ -158,11 +193,11 @@ public class ReciclajeServicio {
         Material scannedMaterialProps = objectMapper.readValue(qrDataJson, Material.class);
 
         // 2. Buscar el material en la base de datos por su codigoBarra
-        Optional<Material> existingMaterial = materialRepository.findByCodigoBarra(scannedMaterialProps.getCodigoBarra());
+        List<Material> existingMaterial = materialRepository.findByCodigoBarra(scannedMaterialProps.getCodigoBarra());
         
         Material materialToRecycle;
-        if (existingMaterial.isPresent()) {
-            materialToRecycle = existingMaterial.get();
+        if (existingMaterial.isEmpty()) {
+            materialToRecycle = existingMaterial.get(0);
             // Opcional: Actualizar propiedades del material existente si el QR trae información más reciente
             // materialToRecycle.setNombre(scannedMaterialProps.getNombre());
             // materialToRecycle.setDescripcion(scannedMaterialProps.getDescripcion());
@@ -249,10 +284,13 @@ public class ReciclajeServicio {
      * Verifica y añade logros al usuario.
      */
     private void verificarLogrosNuevoNivel(Usuario usuario, Nivel nivel) {
-        if (nivel.getLogro() != null && !usuario.getLogros().contains(nivel.getLogro())) {
-            usuario.getLogros().add(nivel.getLogro());
+        if (nivel.getLogro() != null && !usuario.getLogrosDesbloqueados().contains(nivel.getLogro())) {
+            usuario.getLogrosDesbloqueados().add(nivel.getLogro());
             // No guardar usuario aquí, se guarda al final de la transacción de validación
             // Aquí podrías agregar notificación al usuario
+            
+            // Mantén la relación bidireccional actualizada
+            nivel.getLogro().getUsuarios().add(usuario);
         }
     }
 

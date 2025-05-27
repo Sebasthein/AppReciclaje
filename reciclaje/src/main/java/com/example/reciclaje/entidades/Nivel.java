@@ -35,7 +35,7 @@ public class Nivel {
 
     @JsonProperty("nombre")
     private String nombre; // Novato, Intermedio, Pro...
-    private int puntosMinimos;
+    private Integer puntosRequeridos;
 
     @OneToMany(mappedBy = "nivel")
     private List<Usuario> usuarios;
