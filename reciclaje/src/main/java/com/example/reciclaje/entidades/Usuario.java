@@ -23,9 +23,7 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,116 +34,86 @@ import lombok.Setter;
 @Entity
 @Table(name = "usuarios")
 @Data
+
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Usuario implements UserDetails {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@EqualsAndHashCode.Include
+	private Long id;
 
-    private String nombre;
-    
-    @EqualsAndHashCode.Include
-    private String email;
-    private String password;
-    private int puntos;
-    
-    // Método para actualizar los puntos
-    public void actualizarPuntos() {
-        this.puntos = this.reciclajes.stream()
-                .mapToInt(Reciclaje::getPuntosGanados)
-                .sum();
-    }
-    
-    // Método getter para la vista
-    public int getPuntos() {
-        return this.puntos;
-    }
-    
-    @Column(name = "direccion")
-    private String direccion;
+	private String nombre;
+	@EqualsAndHashCode.Include
+	private String email;
+	private String password;
+	private int puntos;
+	
+	@Column(name = "direccion") // Asegúrate de que el nombre de la columna coincida con tu DB
+	private String direccion;
 
-    @Column(name = "telefono")
-    private String telefono;
+	@Column(name = "telefono") // Asegúrate de que el nombre de la columna coincida con tu DB
+	private String telefono;
 
-    @Column(name = "avatar_id")
-    private String avatarId;
+	@Column(name = "avatar_id")
+	private String avatarId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "nivel_id")
-    private Nivel nivel;
+//	@Lob
+//	@Column(columnDefinition = "bytea") // Para PostgreSQL
+//	private byte[] FotoUrl;
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
-    private List<Reciclaje> reciclajes = new ArrayList<>();
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "nivel_id")
+	private Nivel nivel;
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<UsuarioRol> usuarioRoles = new HashSet<>();
+	@OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+	private List<Reciclaje> reciclajes = new ArrayList<>();
 
-    // Relación con Logros - Versión corregida
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "usuario_logro",
-        joinColumns = @JoinColumn(name = "usuario_id"),
-        inverseJoinColumns = @JoinColumn(name = "logro_id")
-    )
-    private Set<Logro> logrosDesbloqueados = new HashSet<>();
+	@OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Set<UsuarioRol> usuarioRoles = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "usuario_roles", 
-        joinColumns = @JoinColumn(name = "usuario_id"), 
-        inverseJoinColumns = @JoinColumn(name = "rol_id")
-    )
-    private Set<Rol> roles = new HashSet<>();
+	@ManyToMany(mappedBy = "usuarios")
+	private Set<Logro> logros = new HashSet<>();
 
-    // Métodos de UserDetails
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        Set<GrantedAuthority> authorities = new HashSet<>();
-        for (UsuarioRol usuarioRol : usuarioRoles) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + usuarioRol.getRol().getNombre()));
-        }
-        return authorities;
-    }
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "usuario_id"), inverseJoinColumns = @JoinColumn(name = "rol_id"))
 
-    @Override
-    public String getUsername() {
-        return email;
-    }
+	private Set<Rol> roles = new HashSet<>();
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+	// Método getRoles corregido
+	public Set<Rol> getRoles() {
+		return roles;
+	}
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+	// UserDetails methods
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		Set<GrantedAuthority> authorities = new HashSet<>();
+		for (UsuarioRol usuarioRol : usuarioRoles) {
+			authorities.add(new SimpleGrantedAuthority("ROLE_" + usuarioRol.getRol().getNombre()));
+		}
+		return authorities;
+	}
 
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+	@Override
+	public String getUsername() {
+		return email;
+	}
 
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
+	@Override
+	public boolean isAccountNonExpired() {
+		return true;
+	}
 
-    public void agregarLogro(Logro logro) {
-        this.logrosDesbloqueados.add(logro);
-        logro.getUsuarios().add(this);
-    }
+	@Override
+	public boolean isAccountNonLocked() {
+		return true;
+	}
 
-    public void eliminarLogro(Logro logro) {
-        this.logrosDesbloqueados.remove(logro);
-        logro.getUsuarios().remove(this);
-    }
-
-   
-
+	@Override
+	public boolean isCredentialsNonExpired() {
+		return true;
+	}
 }

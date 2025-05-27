@@ -1,18 +1,15 @@
 package com.example.reciclaje.servicio;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID; // Importar UUID para generar semillas únicas si es necesario
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.example.reciclaje.entidades.Logro;
 import com.example.reciclaje.entidades.Nivel;
 import com.example.reciclaje.entidades.Rol;
 import com.example.reciclaje.entidades.Usuario;
@@ -21,10 +18,8 @@ import com.example.reciclaje.repositorio.NivelRepositorio;
 import com.example.reciclaje.repositorio.RolRepositorio;
 import com.example.reciclaje.repositorio.UsuarioRepositorio;
 import com.example.reciclaje.servicioDTO.UsuarioDTO;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,10 +32,6 @@ public class UsuarioServicio {
     private final NivelRepositorio nivelRepository;
     private final PasswordEncoder passwordEncoder;
     private final RolRepositorio rolRepositorio;
-    private final LogroServicio logroService;
- 
-    private final NivelServicio nivelServicio;
-    
 
     // Lista de emails que tendrán rol ADMIN (podría moverse a application.properties)
     private static final Set<String> ADMIN_EMAILS = Set.of(
@@ -95,7 +86,7 @@ public class UsuarioServicio {
         usuario.setDireccion(usuario.getDireccion() != null ? usuario.getDireccion() : ""); // Valor por defecto si es null
 
         if (usuario.getNivel() == null) {
-            Nivel nivelInicial = nivelRepository.findTopByPuntosRequeridosLessThanEqualOrderByPuntosRequeridosDesc(0)
+            Nivel nivelInicial = nivelRepository.findByPuntosMinimos(0)
                 .orElseThrow(() -> new IllegalStateException("Nivel inicial no encontrado"));
             usuario.setNivel(nivelInicial);
         }
@@ -197,11 +188,11 @@ public class UsuarioServicio {
     private Nivel obtenerNivelPorPuntos(int puntos) {
         List<Nivel> niveles = nivelRepository.findAll()
                 .stream()
-                .sorted((n1, n2) -> Integer.compare(n2.getPuntosRequeridos(), n1.getPuntosRequeridos()))
+                .sorted((n1, n2) -> Integer.compare(n2.getPuntosMinimos(), n1.getPuntosMinimos()))
                 .toList();
 
         for (Nivel nivel : niveles) {
-            if (puntos >= nivel.getPuntosRequeridos()) {
+            if (puntos >= nivel.getPuntosMinimos()) {
                 return nivel;
             }
         }
@@ -265,133 +256,4 @@ public class UsuarioServicio {
     public void actualizarUsuario(Usuario usuario) {
         usuarioRepository.save(usuario);
     }
-    
-    @Transactional
-    public void verificarYAsignarLogros(Usuario usuario) {
-        Nivel nuevoNivel = nivelServicio.obtenerNivelPorPuntos(usuario.getPuntos());
-
-        if (!nuevoNivel.equals(usuario.getNivel())) {
-            usuario.setNivel(nuevoNivel);
-
-            Logro logro = nuevoNivel.getLogro();
-            if (logro != null && !usuario.getLogrosDesbloqueados().contains(logro)) {
-                usuario.getLogrosDesbloqueados().add(logro);
-                // Mantener la relación bidireccional
-                logro.getUsuarios().add(usuario);
-                
-                // Opcional: Registrar en logs
-                log.info("Usuario {} desbloqueó el logro {} al alcanzar el nivel {}", 
-                    usuario.getEmail(), 
-                    logro.getNombre(), 
-                    nuevoNivel.getNombre());
-            }
-        }
-    }
-    
-    /**
-     * Obtiene los logros desbloqueados por un usuario
-     * @param usuarioId ID del usuario
-     * @return Lista de logros desbloqueados
-     */
-    public List<Logro> obtenerLogrosDesbloqueados(Long usuarioId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        return new ArrayList<>(usuario.getLogrosDesbloqueados());
-    }
-    /**
-     * Desbloquea un logro para un usuario si no lo tiene ya
-     * @param usuarioId ID del usuario
-     * @param logroId ID del logro a desbloquear
-     */
-    @Transactional
-    public void desbloquearLogro(Long usuarioId, Long logroId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        Logro logro = logroService.obtenerLogroPorId(logroId)
-            .orElseThrow(() -> new RuntimeException("Logro no encontrado"));
-        
-        if (!usuario.getLogrosDesbloqueados().contains(logro)) {
-            usuario.getLogrosDesbloqueados().add(logro);
-            usuarioRepository.save(usuario);
-        }
-    }
-
-    /**
-     * Verifica si un usuario tiene un logro específico
-     * @param usuarioId ID del usuario
-     * @param logroId ID del logro a verificar
-     * @return true si el usuario tiene el logro, false si no
-     */
-    public boolean tieneLogro(Long usuarioId, Long logroId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        return usuario.getLogrosDesbloqueados().stream()
-            .anyMatch(logro -> logro.getId().equals(logroId));
-    }
-
-    /**
-     * Desbloquea automáticamente logros basados en los puntos del usuario
-     * @param usuarioId ID del usuario
-     */
-    @Transactional
-    public void verificarLogrosPorPuntos(Long usuarioId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        
-        List<Logro> todosLogros = logroService.obtenerTodosLogros();
-        
-        for (Logro logro : todosLogros) {
-            if (usuario.getPuntos() >= logro.getPuntosRequeridos() && 
-                !usuario.getLogrosDesbloqueados().contains(logro)) {
-                usuario.getLogrosDesbloqueados().add(logro);
-                log.info("Logro desbloqueado: {} para el usuario {}", 
-                        logro.getNombre(), usuario.getEmail());
-            }
-        }
-        
-        usuarioRepository.save(usuario);
-    }
-    
-    /**
-     * Obtiene los logros que un usuario aún no ha desbloqueado
-     * @param usuarioId ID del usuario
-     * @return Lista de logros no desbloqueados
-     */
-    public List<Logro> obtenerLogrosNoDesbloqueados(Long usuarioId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        List<Logro> todosLogros = logroService.obtenerTodosLogros();
-        todosLogros.removeAll(usuario.getLogrosDesbloqueados());
-        return todosLogros;
-    }
-
-    /**
-     * Obtiene el progreso de un usuario hacia un logro específico
-     * @param usuarioId ID del usuario
-     * @param logroId ID del logro
-     * @return Porcentaje de progreso (0-100)
-     */
-    public int obtenerProgresoHaciaLogro(Long usuarioId, Long logroId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        Logro logro = logroService.obtenerLogroPorId(logroId)
-            .orElseThrow(() -> new RuntimeException("Logro no encontrado"));
-        
-        if (usuario.getLogrosDesbloqueados().contains(logro)) {
-            return 100;
-        }
-        
-        // Calcula el progreso basado en los puntos del usuario vs los puntos requeridos
-        return (int) Math.min(100, (usuario.getPuntos() * 100.0 / logro.getPuntosRequeridos()));
-    }
-    
-    @Transactional(readOnly = true)
-    public Usuario buscarPorId(Long id) {
-        // Opción 1: fetch logros con query custom si tienes
-        // Opción 2: usar fetch LAZY y dentro de la transacción acceder a getLogrosDesbloqueados()
-        Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        usuario.getLogrosDesbloqueados().size(); // fuerza carga
-        return usuario;
-    }
-    
 }
