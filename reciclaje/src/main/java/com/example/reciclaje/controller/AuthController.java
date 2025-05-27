@@ -2,6 +2,7 @@ package com.example.reciclaje.controller;
 
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.reciclaje.entidades.Reciclaje;
 import com.example.reciclaje.entidades.Usuario;
+import com.example.reciclaje.servicio.ReciclajeServicio;
 import com.example.reciclaje.servicio.UsuarioServicio;
 import com.example.reciclaje.servicioDTO.LoginRequest;
 import com.example.reciclaje.servicioDTO.RegistroRequest;
@@ -36,11 +39,13 @@ public class AuthController {
 
 	private final UsuarioServicio usuarioServicio;
 	private final AuthenticationManager authenticationManager;
+	private final ReciclajeServicio reciclajeServicio;
 
 	@Autowired
-	public AuthController(UsuarioServicio usuarioServicio, AuthenticationManager authenticationManager) {
+	public AuthController(UsuarioServicio usuarioServicio, AuthenticationManager authenticationManager, ReciclajeServicio reciclajeServicio) {
 		this.usuarioServicio = usuarioServicio;
 		this.authenticationManager = authenticationManager;
+		this.reciclajeServicio = reciclajeServicio;
 	}
 
 	// 👉 Mostrar formulario de login
@@ -147,8 +152,21 @@ usuario.setTelefono(registroRequest.getTelefono());
 	@GetMapping("/dashboard")
 	 public String dashboard(Model model, Principal principal) {
 	 Usuario usuario = usuarioServicio.findByEmail(principal.getName());
+	 int logros = usuario.getLogrosDesbloqueados().size();
+	 
+	 //Actualizar Puntos
+	 List<Reciclaje> reciclajes = reciclajeServicio.obtenerReciclajesPorUsuario(usuario.getId()); 
+     int puntos = reciclajes.stream()
+             .mapToInt(Reciclaje::getPuntosGanados)
+             .sum();
+	 
+	 usuarioServicio.agregarPuntos(usuario.getId(),puntos);
+	 //System.out.println(usuario.toString());
 	 // Convertir a DTO si es necesario o pasar la entidad directamente
+	 
 	model.addAttribute("usuario", usuario);
+	model.addAttribute("logros",logros);
+	
 	return "dashboard";
 	}
 

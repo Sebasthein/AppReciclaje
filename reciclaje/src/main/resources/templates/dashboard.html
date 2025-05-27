@@ -12,9 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-	<script src="/plugins/qrCode.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-	<style>
+    <style>
         :root {
             --primary-color: #00C853;
             --secondary-color: #64DD17;
@@ -515,11 +513,9 @@
         </a>
         <a href="#" class="sidebar-link" data-bs-toggle="modal" data-bs-target="#editProfileModal">
             <i class="fas fa-user"></i> Mi Perfil
-        </a>
-        <a href="#" class="sidebar-link">
-            <i class="fas fa-recycle"></i> Reciclaje
-        </a>
-        <a href="#" class="sidebar-link">
+        </a> <a th:href="@{/reciclaje}" class="sidebar-link"> <i
+			class="fas fa-recycle"></i> Reciclaje
+		</a> <a th:href="@{/api/logros}" class="sidebar-link">
             <i class="fas fa-trophy"></i> Logros
         </a>
         <a href="#" class="sidebar-link">
@@ -599,7 +595,7 @@
                 <div class="card shadow-sm mt-4">
                     <div class="card-body">
                         <h6 class="fw-bold text-dark">
-                            <i class="fas fa-qrcode me-2"></i> Lector código QR
+                            <i class="fas fa-qrcode me-2"></i> Mi código QR
                         </h6>
                         <p class="small text-muted">
                             Escanea en centros de reciclaje para ganar puntos
@@ -608,17 +604,15 @@
                         <div class="d-flex justify-content-center mb-3">
                             <div class="qr-placeholder rounded-3 p-3 bg-light d-flex flex-column align-items-center justify-content-center" style="width: 160px; height: 160px; border: 2px dashed #ddd;">
                                 <i class="fas fa-qrcode text-muted mb-2" style="font-size: 2.5rem;"></i>
-								
-								<canvas hidden="" id="qr-canvas" class="img-fluid"></canvas>
                                 <span class="small text-muted">Código personal</span>
                             </div>
                         </div>
-                        
-                        <button class="btn-green btn-sm w-100 mt-2" onclick="encenderCamara()">
-                            <i class="fas fa-recycle me-1"></i> Usame
-                        </button>
-						
-                    </div>
+
+						<button class="btn-green btn-sm w-100 mt-2"
+							onclick="location.href='/reciclaje'">
+							<i class="fas fa-recycle me-1"></i> Primer reciclaje
+						</button>
+					</div>
                 </div>
             </div>
             
@@ -630,7 +624,7 @@
                                 <div class="stat-icon">
                                     <i class="fas fa-coins"></i>
                                 </div>
-                                <div class="stat-value" th:text="${usuario.puntos} ?: 100">100</div>
+                                <div class="stat-value" th:text="${usuario.puntos}"></div>
                                 <div class="stat-label">Puntos Acumulados</div>
                             </div>
                         </div>
@@ -654,7 +648,7 @@
                                 <div class="stat-icon">
                                     <i class="fas fa-level-up-alt"></i>
                                 </div>
-                                <div class="stat-value">1</div>
+                                <div class="stat-value" th:text="${usuario.nivel.nombre}">1</div>
                                 <div class="stat-label">Nivel Actual</div>
                             </div>
                         </div>
@@ -678,8 +672,8 @@
                                 <div class="stat-icon">
                                     <i class="fas fa-medal"></i>
                                 </div>
-                                <div class="stat-value">1</div>
-                                <div class="stat-label">Logros</div>
+                                <div class="stat-value" th:text="${logros}">1</div>
+                                <div th:href="@{/logros}" class="stat-label">Logros</div>
                             </div>
                         </div>
                     </div>
@@ -836,7 +830,7 @@
             </button>
         </div>
     </div>
-
+    
     <div class="mb-3">
         <label for="confirmNewPassword" class="form-label">Confirmar nueva contraseña</label>
         <div class="input-group">
@@ -860,8 +854,6 @@
             </div>
         </div>
     </div>
-	
-	<script src="/js/index.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
@@ -899,20 +891,20 @@
             }
             
             // 2. NUEVO Código para manejar mensajes (añadir esto)
-	    const alerts = document.querySelectorAll('.alert');
-	    alerts.forEach(alert => {
-	        // Cerrar automáticamente después de 5 segundos
-	        setTimeout(() => {
-	            alert.classList.add('fade-out');
-	            setTimeout(() => alert.remove(), 300);
-	        }, 5000);
-	        
-	        // Cerrar al hacer clic en la X
-	        alert.querySelector('.btn-close').addEventListener('click', function() {
-	            alert.classList.add('fade-out');
-	            setTimeout(() => alert.remove(), 300);
-	        });
-	    });
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        // Cerrar automáticamente después de 5 segundos
+        setTimeout(() => {
+            alert.classList.add('fade-out');
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+        
+        // Cerrar al hacer clic en la X
+        alert.querySelector('.btn-close').addEventListener('click', function() {
+            alert.classList.add('fade-out');
+            setTimeout(() => alert.remove(), 300);
+        });
+    });
 
             
             // Avatar upload functionality
