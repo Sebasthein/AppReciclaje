@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reciclaje Inteligente - Mis Niveles</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #00C853;
+            --primary-dark: #009624;
+            --primary-light: #5EFC82;
+            --secondary-color: #424242;
+            --accent-color: #FFD600;
+            --background-light: #F5F5F6;
+            --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        body {
+            background-color: var(--background-light);
+            font-family: 'Poppins', sans-serif;
+            color: var(--secondary-color);
+        }
+        
+        .container {
+            max-width: 1000px;
+            padding: 0 15px;
+        }
+        
+        /* Header Styles */
+        .app-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .app-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .app-logo i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-right: 15px;
+        }
+        
+        .app-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .app-subtitle {
+            font-size: 1rem;
+            color: var(--secondary-color);
+            opacity: 0.8;
+            font-weight: 400;
+        }
+        
+        /* Back Button */
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: var(--secondary-color);
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .back-button:hover {
+            background-color: #f5f5f5;
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* User Profile Section */
+        .profile-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .profile-info {
+            flex: 1;
+        }
+        
+        .profile-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--secondary-color);
+        }
+        
+        .profile-level {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: #333;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        
+        .profile-points {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            opacity: 0.8;
+        }
+        
+        .profile-points strong {
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+        
+        /* Progress Section */
+        .progress-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .progress-container {
+            margin-bottom: 25px;
+        }
+        
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .progress-label {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+        
+        .progress-label.current {
+            color: var(--primary-dark);
+            font-weight: 500;
+        }
+        
+        .progress-bar-container {
+            height: 12px;
+            background-color: #E0E0E0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-light), var(--primary-color));
+            border-radius: 6px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                      rgba(255,255,255,0.3) 0%, 
+                      rgba(255,255,255,0) 50%, 
+                      rgba(255,255,255,0.3) 100%);
+            animation: progressShine 2s infinite;
+        }
+        
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        /* Levels Section */
+        .levels-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+        }
+        
+        .levels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .level-card {
+            background-color: #FAFAFA;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 2px solid #E0E0E0;
+            position: relative;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .level-card.unlocked {
+            background-color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 5px 15px rgba(0, 200, 83, 0.1);
+        }
+        
+        .level-card.current {
+            background-color: var(--primary-light);
+            border-color: var(--primary-dark);
+            transform: scale(1.02);
+        }
+        
+        .level-card.locked {
+            opacity: 0.7;
+        }
+        
+        .level-badge {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        .level-card.unlocked .level-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+        }
+        
+        .level-card.current .level-badge {
+            background: linear-gradient(135deg, var(--accent-color), #FFC107);
+            transform: scale(1.1);
+        }
+        
+        .level-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+        
+        .level-card.unlocked .level-name {
+            color: var(--primary-dark);
+        }
+        
+        .level-card.current .level-name {
+            font-weight: 700;
+        }
+        
+        .level-points {
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            opacity: 0.8;
+            margin-top: auto;
+        }
+        
+        .level-lock {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #9E9E9E;
+            font-size: 0.9rem;
+        }
+        
+        .level-card.unlocked .level-lock {
+            display: none;
+        }
+        
+        .level-number {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+            opacity: 0.7;
+        }
+        
+        /* Badges for special levels */
+        .level-special {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            background-color: var(--accent-color);
+            color: #333;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 900px) {
+            .levels-grid {
+                grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .levels-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .profile-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+            
+            .profile-name {
+                font-size: 1.1rem;
+            }
+            
+            .level-card {
+                min-height: 160px;
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .levels-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .profile-section {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .profile-avatar {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+<a th:href="@{/dashboard}" class="back-button">
+    <i class="fas fa-arrow-left"></i>
+</a>
+
+<div class="container py-4">
+    <div class="app-header">
+        <div class="app-logo">
+            <i class="fas fa-recycle"></i>
+            <h1 class="app-title">Mis Niveles</h1>
+        </div>
+        <p class="app-subtitle">Tu progreso en el programa de reciclaje</p>
+    </div>
+    
+    <!-- Sección de Perfil del Usuario -->
+    <div class="profile-section">
+        <div class="profile-avatar">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="profile-info">
+            <h3 class="profile-name" id="userName">Nombre del Usuario</h3>
+            <span class="profile-level" id="userLevel">Semilla Verde</span>
+            <p class="profile-points">Puntos acumulados: <strong id="userPoints">0</strong></p>
+        </div>
+    </div>
+    
+    <!-- Sección de Progreso -->
+    <div class="progress-section">
+        <h3 class="section-title">
+            <i class="fas fa-chart-line"></i>
+            Tu Progreso
+        </h3>
+        
+        <div class="progress-container">
+            <div class="progress-labels">
+                <span class="progress-label" id="currentLevelLabel">Semilla Verde</span>
+                <span class="progress-label current" id="pointsLabel">0/100 pts</span>
+                <span class="progress-label" id="nextLevelLabel">Aprendiz Eco</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="levelProgress" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info" role="alert" id="progressMessage">
+            <i class="fas fa-info-circle"></i> Necesitas <strong>100 puntos</strong> más para alcanzar el siguiente nivel.
+        </div>
+    </div>
+    
+    <!-- Sección de Niveles -->
+    <div class="levels-section">
+        <h3 class="section-title">
+            <i class="fas fa-trophy"></i>
+            Niveles de Reciclaje
+        </h3>
+        
+        <div class="levels-grid" id="levelsGrid">
+            <!-- Los niveles se cargarán dinámicamente con JavaScript -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Datos de niveles desde tu base de datos
+    const levelsData = [
+        { id: 1, name: "Semilla Verde", pointsRequired: 0 },
+        { id: 2, name: "Aprendiz Eco", pointsRequired: 100 },
+        { id: 3, name: "Guerrero Verde", pointsRequired: 300 },
+        { id: 4, name: "Protector Tierra", pointsRequired: 600 },
+        { id: 5, name: "Ecólider", pointsRequired: 1000 },
+        { id: 6, name: "Guardian Bosque", pointsRequired: 1500 },
+        { id: 7, name: "Héroe Climático", pointsRequired: 2200 },
+        { id: 8, name: "Maestro Reciclador", pointsRequired: 3000 },
+        { id: 9, name: "Leyenda Sostenible", pointsRequired: 4500 },
+        { id: 10, name: "Titán Zero Waste", pointsRequired: 6000 },
+        { id: 11, name: "Embajador Verde", pointsRequired: 8000 },
+        { id: 12, name: "Innovador Eco", pointsRequired: 10500 },
+        { id: 13, name: "Defensor Planeta", pointsRequired: 13500 },
+        { id: 14, name: "Mito Reciclaje", pointsRequired: 17000 },
+        { id: 15, name: "Guardian Gaia", pointsRequired: 20000 }
+    ];
+
+    // Datos de ejemplo del usuario - en producción vendrían de tu backend
+    const userData = {
+        name: "Ana Martínez",
+        points: 1850, // Cambia este valor para probar diferentes niveles
+        avatar: "A" // Primera letra del nombre para el avatar
+    };
+
+    // Función para formatear números con separadores de miles
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    // Función para determinar el nivel actual del usuario
+    function getCurrentLevel(points) {
+        for (let i = levelsData.length - 1; i >= 0; i--) {
+            if (points >= levelsData[i].pointsRequired) {
+                return {
+                    level: levelsData[i],
+                    nextLevel: levelsData[i+1] || null,
+                    levelIndex: i
+                };
+            }
+        }
+        return {
+            level: levelsData[0],
+            nextLevel: levelsData[1],
+            levelIndex: 0
+        };
+    }
+
+    // Función para calcular el progreso hacia el siguiente nivel
+    function calculateProgress(currentPoints, currentLevel, nextLevel) {
+        if (!nextLevel) return 100; // Si es el nivel máximo
+        
+        const range = nextLevel.pointsRequired - currentLevel.pointsRequired;
+        const progress = ((currentPoints - currentLevel.pointsRequired) / range) * 100;
+        return Math.min(Math.max(progress, 0), 100);
+    }
+
+    // Función para renderizar los niveles
+    function renderLevels(currentLevelIndex) {
+        const levelsGrid = document.getElementById('levelsGrid');
+        levelsGrid.innerHTML = '';
+
+        levelsData.forEach((level, index) => {
+            const levelCard = document.createElement('div');
+            levelCard.className = 'level-card';
+            
+            // Determinar si el nivel está desbloqueado, es actual o bloqueado
+            if (index < currentLevelIndex) {
+                levelCard.classList.add('unlocked');
+            } else if (index === currentLevelIndex) {
+                levelCard.classList.add('unlocked', 'current');
+            } else {
+                levelCard.innerHTML += '<i class="fas fa-lock level-lock"></i>';
+            }
+            
+            // Marcar niveles especiales
+            const isSpecial = index >= levelsData.length - 3; // Últimos 3 niveles son especiales
+            const specialBadge = isSpecial ? '<span class="level-special">Élite</span>' : '';
+            
+            levelCard.innerHTML = `
+                <span class="level-number">Nivel ${level.id}</span>
+                ${specialBadge}
+                <div class="level-badge">${level.id}</div>
+                <h4 class="level-name">${level.name}</h4>
+                <p class="level-points">${formatNumber(level.pointsRequired)}+ pts</p>
+            `;
+            
+            levelsGrid.appendChild(levelCard);
+        });
+    }
+
+    // Función para actualizar la información del usuario y progreso
+    function updateUserInfo() {
+        const { level, nextLevel, levelIndex } = getCurrentLevel(userData.points);
+        
+        // Actualizar información del usuario
+        document.getElementById('userName').textContent = userData.name;
+        document.getElementById('userPoints').textContent = formatNumber(userData.points);
+        document.getElementById('userLevel').textContent = level.name;
+        
+        // Actualizar avatar con inicial
+        document.querySelector('.profile-avatar').textContent = userData.avatar || userData.name.charAt(0);
+        
+        // Actualizar barra de progreso
+        const progress = calculateProgress(userData.points, level, nextLevel);
+        document.getElementById('levelProgress').style.width = `${progress}%`;
+        
+        // Actualizar etiquetas
+        document.getElementById('currentLevelLabel').textContent = level.name;
+        
+        if (nextLevel) {
+            document.getElementById('nextLevelLabel').textContent = nextLevel.name;
+            document.getElementById('pointsLabel').textContent = 
+                `${formatNumber(userData.points)}/${formatNumber(nextLevel.pointsRequired)} pts`;
+            
+            const pointsNeeded = nextLevel.pointsRequired - userData.points;
+            document.getElementById('progressMessage').innerHTML = `
+                <i class="fas fa-info-circle"></i> Necesitas <strong>${formatNumber(pointsNeeded)} puntos</strong> 
+                más para convertirte en <strong>${nextLevel.name}</strong>.
+            `;
+        } else {
+            // Usuario ha alcanzado el nivel máximo
+            document.getElementById('nextLevelLabel').textContent = "¡Máximo nivel!";
+            document.getElementById('pointsLabel').textContent = `${formatNumber(userData.points)} pts`;
+            document.getElementById('progressMessage').innerHTML = `
+                <i class="fas fa-trophy"></i> ¡Felicidades! Has alcanzado el nivel máximo <strong>${level.name}</strong>.
+            `;
+        }
+        
+        // Renderizar niveles
+        renderLevels(levelIndex);
+    }
+
+    // Inicializar la vista cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', () => {
+        updateUserInfo();
+        
+        // Aquí podrías agregar una llamada AJAX para obtener los datos reales del usuario
+        /*
+        fetch('/api/user/levels')
+            .then(response => response.json())
+            .then(data => {
+                userData = data;
+                updateUserInfo();
+            })
+            .catch(error => {
+                console.error('Error al cargar los niveles:', error);
+            });
+        */
+    });
+
+    // Ejemplo: Cambiar puntos para probar diferentes niveles (solo para demostración)
+    // userData.points = 4500; // Prueba cambiando este valor y recargando
+</script>
+</body>
+</html>

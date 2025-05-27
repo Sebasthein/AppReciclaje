@@ -5,17 +5,31 @@ import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-public class CustomUserDetails implements UserDetails {
+import com.example.reciclaje.entidades.Usuario;
 
-	 	private String email;
-	    private String password;  // Si necesitas agregar la contraseña (aunque no la uses directamente)
-	    private Collection<? extends GrantedAuthority> authorities;
+import lombok.Data;
+
+@Data
+public class CustomUserDetails implements UserDetails {
+	
+
+	private Long id;
+	private Usuario usuario;
+	private String email;
+	private String password; // Si necesitas agregar la contraseña (aunque no la uses directamente)
+	private Collection<? extends GrantedAuthority> authorities;
 
 	    // Constructor
 	    public CustomUserDetails(String email, String password, Collection<? extends GrantedAuthority> authorities) {
-	        this.email = email;
+	    	this.id = id;
+	    	this.email = email;
 	        this.password = password;
 	        this.authorities = authorities;
+	    }
+	    
+	    // ✅ Método getter que necesitas
+	    public Long getId() {
+	        return id;
 	    }
 	    
 	    @Override
