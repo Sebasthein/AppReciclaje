@@ -3,8 +3,11 @@ package com.example.reciclaje.entidades;
 import java.util.HashSet;
 import java.util.Set;
 
+<<<<<<< HEAD
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+=======
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -39,16 +42,22 @@ public class Logro {
     @Column(nullable = true) // Temporalmente nullable
     private Integer puntosRequeridos; // Cambiado de int a Integer
     
+<<<<<<< HEAD
     @ToString.Exclude
     @JsonIgnore
+=======
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
     @ManyToOne
     private Usuario usuario;
 
     
 
     // Solo una anotación @ManyToMany es necesaria
+<<<<<<< HEAD
     @ToString.Exclude
     @JsonIgnore
+=======
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
     @ManyToMany(mappedBy = "logrosDesbloqueados", fetch = FetchType.LAZY)
     private Set<Usuario> usuarios = new HashSet<>();
     
@@ -63,6 +72,7 @@ public class Logro {
         usuario.getLogrosDesbloqueados().remove(this);
     }
     
+<<<<<<< HEAD
     @Override
     public String toString() {
         return "Logro{" +
@@ -74,5 +84,7 @@ public class Logro {
             '}';
     }
     
+=======
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
  
 }

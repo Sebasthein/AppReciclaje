@@ -16,7 +16,10 @@ import com.example.reciclaje.repositorio.MaterialRepositorio;
 import com.example.reciclaje.repositorio.UsuarioRepositorio;
 import com.example.reciclaje.seguridad.CustomUserDetails;
 import com.example.reciclaje.servicio.ReciclajeServicio;
+<<<<<<< HEAD
 import com.example.reciclaje.servicio.UsuarioServicio;
+=======
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
 import com.example.reciclaje.servicioDTO.MaterialScanResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -30,7 +33,10 @@ public class ReciclajeController {
 	 private final ReciclajeServicio reciclajeService;
 	    private final MaterialRepositorio materialRepositorio;
 	    private final UsuarioRepositorio usuarioRepositorio;
+<<<<<<< HEAD
 	    private final UsuarioServicio usuarioServicio;
+=======
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
 
 	    @PostMapping("/registrar")
 	    public ResponseEntity<?> registrarReciclaje(
@@ -45,8 +51,11 @@ public class ReciclajeController {
 	            }
 	            Long usuarioId = optionalUsuario.get().getId();
 	            Reciclaje reciclaje = reciclajeService.registrarReciclaje(usuarioId, materialId, cantidad, false);
+<<<<<<< HEAD
 	            
 	            Usuario user = usuarioServicio.agregarPuntos(usuarioId, reciclaje.getPuntosGanados());
+=======
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
 	            return ResponseEntity.status(HttpStatus.CREATED).body(reciclaje);
 	        } catch (Exception e) {
 	            System.err.println("Error al registrar el reciclaje: " + e.getMessage());

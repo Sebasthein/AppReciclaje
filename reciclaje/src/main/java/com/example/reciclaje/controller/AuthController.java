@@ -228,5 +228,10 @@ usuario.setTelefono(registroRequest.getTelefono());
 
 	    return "redirect:/dashboard";
     }
+	
+	 @GetMapping("/reciclaje")
+	    public String vistaReciclaje() {
+	        return "reciclaje"; // corresponde a templates/reciclaje.html
+	    }
 
 }

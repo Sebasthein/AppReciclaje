@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reciclaje Inteligente - Escaneo</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #00C853;
+            --primary-dark: #009624;
+            --primary-light: #5EFC82;
+            --secondary-color: #424242;
+            --accent-color: #FFD600;
+            --background-light: #F5F5F6;
+            --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        body {
+            background-color: var(--background-light);
+            font-family: 'Poppins', sans-serif;
+            color: var(--secondary-color);
+        }
+        
+        .container {
+            max-width: 600px;
+            padding: 0 15px;
+        }
+        
+        /* Header Styles */
+        .app-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .app-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .app-logo i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-right: 15px;
+        }
+        
+        .app-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .app-subtitle {
+            font-size: 1rem;
+            color: var(--secondary-color);
+            opacity: 0.8;
+            font-weight: 400;
+        }
+        
+        /* Scanner Container */
+        .scan-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .scanner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .scanner-title {
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin: 0;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            margin-right: 10px;
+            position: relative;
+        }
+        
+        .status-indicator::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            70% { transform: scale(1.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+        
+        /* Scanner View */
+        .scanner-view {
+            width: 100%;
+            height: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #E0E0E0;
+            margin-bottom: 15px;
+        }
+        
+        .scanner-view::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            margin: 15px;
+            z-index: 1;
+            pointer-events: none;
+            animation: scanner-border 2s infinite alternate;
+        }
+        
+        @keyframes scanner-border {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.8; }
+        }
+        
+        #qr-scanner, #barcode-scanner {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .scanner-placeholder {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            color: #9E9E9E;
+            font-size: 0.9rem;
+        }
+        
+        /* Scan Options */
+        .scan-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .scan-option-btn {
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: 500;
+            border: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .scan-option-btn i {
+            font-size: 1.1rem;
+        }
+        
+        .scan-option-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 200, 83, 0.3);
+        }
+        
+        .scan-option-btn:not(.active) {
+            background-color: white;
+            color: var(--secondary-color);
+            border: 1px solid #E0E0E0;
+        }
+        
+        .scan-option-btn:not(.active):hover {
+            background-color: #f5f5f5;
+            transform: translateY(-2px);
+        }
+        
+        /* Camera Toggle */
+        .camera-toggle {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .btn-camera {
+            background-color: white;
+            color: var(--secondary-color);
+            border: 1px solid #E0E0E0;
+            border-radius: 30px;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn-camera:hover {
+            background-color: #f5f5f5;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        /* Info Alert */
+        .scan-info {
+            background-color: #E3F2FD;
+            color: #0D47A1;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .scan-info i {
+            font-size: 1.1rem;
+            margin-top: 2px;
+        }
+        
+        /* Result Card */
+        .result-card {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .result-header i {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-right: 15px;
+        }
+        
+        .result-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin: 0;
+        }
+        
+        .material-info {
+            background-color: #E8F5E9;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .material-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+        
+        .material-description {
+            font-size: 0.95rem;
+            color: var(--secondary-color);
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .material-category {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+        
+        .material-category span:first-child {
+            opacity: 0.7;
+        }
+        
+        /* Points Section */
+        .points-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quantity-label {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            opacity: 0.8;
+        }
+        
+        .quantity-input {
+            width: 70px;
+            padding: 8px 10px;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .points-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .points-label {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            opacity: 0.8;
+        }
+        
+        .points-badge {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(0, 200, 83, 0.2);
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-action {
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .btn-confirm {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 200, 83, 0.3);
+        }
+        
+        .btn-confirm:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 200, 83, 0.4);
+        }
+        
+        .btn-cancel {
+            background-color: white;
+            color: #F44336;
+            border: 1px solid #FFCDD2;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #FFEBEE;
+            border-color: #F44336;
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #E0E0E0;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 1rem;
+            color: var(--secondary-color);
+            opacity: 0.8;
+        }
+        
+        /* Messages */
+        .alert-message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            animation: fadeIn 0.4s;
+        }
+        
+        .alert-success {
+            background-color: #E8F5E9;
+            color: #1B5E20;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .alert-error {
+            background-color: #FFEBEE;
+            color: #C62828;
+            border-left: 4px solid #F44336;
+        }
+        
+        .alert-message i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        /* Back Button */
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: var(--secondary-color);
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .back-button:hover {
+            background-color: #f5f5f5;
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 576px) {
+            .app-title {
+                font-size: 1.5rem;
+            }
+            
+            .scan-option-btn {
+                padding: 10px 15px;
+                font-size: 0.85rem;
+            }
+            
+            .scanner-view {
+                height: 250px;
+            }
+            
+            .result-header i {
+                font-size: 1.5rem;
+            }
+            
+            .result-title {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<a th:href="@{/dashboard}" class="back-button">
+    <i class="fas fa-arrow-left"></i>
+</a>
+
+<div class="container py-4">
+    <div class="app-header">
+        <div class="app-logo">
+            <i class="fas fa-recycle"></i>
+            <h1 class="app-title">Reciclaje Inteligente</h1>
+        </div>
+        <p class="app-subtitle">Escanea tu material reciclable para ganar puntos</p>
+    </div>
+    
+    <div class="scan-options">
+        <button id="qrOption" class="scan-option-btn active">
+            <i class="fas fa-qrcode"></i> QR
+        </button>
+        <button id="barcodeOption" class="scan-option-btn">
+            <i class="fas fa-barcode"></i> Código de Barras
+        </button>
+    </div>
+    
+    <div class="scan-container">
+        <div class="scanner-header">
+            <h3 class="scanner-title">
+                <span class="status-indicator"></span>
+                Escáner activo
+            </h3>
+            <span class="badge bg-secondary">Beta</span>
+        </div>
+        
+        <div class="scanner-view">
+            <div id="qr-scanner"></div>
+            <div id="barcode-scanner" style="display: none;">
+                <div class="scanner-placeholder">
+                    <p>Preparando escáner de códigos de barras...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="camera-toggle">
+            <button id="toggleCamera" class="btn-camera">
+                <i class="fas fa-camera"></i> Cambiar cámara
+            </button>
+        </div>
+        
+        <div class="scan-info">
+            <i class="fas fa-info-circle"></i>
+            <div>Coloca el código frente a la cámara. Asegúrate de que esté bien iluminado.</div>
+        </div>
+    </div>
+    
+    <div id="resultCard" class="result-card">
+        <div class="result-header">
+            <i class="fas fa-check-circle"></i>
+            <h3 class="result-title">Material identificado</h3>
+        </div>
+        
+        <div class="material-info">
+            <h4 id="materialName" class="material-name">Cargando información...</h4>
+            <p id="materialDescription" class="material-description"></p>
+            <p class="material-category">
+                <span>Categoría:</span> <span id="materialCategory"></span>
+            </p>
+        </div>
+
+        <div class="points-section">
+            <div class="quantity-control">
+                <label for="materialQuantity" class="quantity-label">Cantidad:</label>
+                <input type="number" id="materialQuantity" class="quantity-input" value="1" min="1">
+            </div>
+            <div class="points-display">
+                <span class="points-label">Puntos totales:</span>
+                <span id="pointsEarned" class="points-badge">+10</span>
+            </div>
+        </div>
+        
+        <div id="confirmationButtons" class="action-buttons d-none">
+            <button id="confirmBtn" class="btn-action btn-confirm">
+                <i class="fas fa-check"></i> Confirmar
+            </button>
+            <button id="cancelBtn" class="btn-action btn-cancel">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+        </div>
+    </div>
+    
+    <div id="loadingSpinner" class="loading-spinner d-none">
+        <div class="spinner"></div>
+        <p class="loading-text">Procesando material reciclable...</p>
+    </div>
+    
+    <div id="successMessage" class="alert-message alert-success d-none" role="alert">
+        <i class="fas fa-check-circle"></i>
+        <span>¡Material registrado con éxito!</span>
+    </div>
+    
+    <div id="errorMessage" class="alert-message alert-error d-none" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Hubo un error al registrar el material.</span>
+    </div>
+</div>
+
+<script>
+    // Referencias a elementos del DOM
+    const resultCard = document.getElementById('resultCard');
+    const materialName = document.getElementById('materialName');
+    const materialDescription = document.getElementById('materialDescription');
+    const materialCategory = document.getElementById('materialCategory');
+    const materialQuantityInput = document.getElementById('materialQuantity');
+    const pointsEarned = document.getElementById('pointsEarned');
+    const confirmationButtons = document.getElementById('confirmationButtons');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+    const toggleCameraBtn = document.getElementById('toggleCamera');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const qrOption = document.getElementById('qrOption');
+    const barcodeOption = document.getElementById('barcodeOption');
+    const qrScannerElement = document.getElementById('qr-scanner');
+    const barcodeScannerElement = document.getElementById('barcode-scanner');
+    
+    // Estado de la aplicación
+    let currentCamera = 'environment'; // 'environment' (trasera) o 'user' (frontal)
+    let html5QrCode;
+    let quaggaInitialized = false;
+    let lastScannedCode = null;
+    let currentScanner = 'qr'; // 'qr' o 'barcode'
+    let lastScannedMaterialData = null;
+
+    /**
+     * Inicializa y comienza el escáner QR.
+     */
+    function initQRScanner() {
+        if (html5QrCode) {
+            html5QrCode.resume();
+            return;
+        }
+        
+        html5QrCode = new Html5Qrcode("qr-scanner");
+        
+        const config = { 
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+        };
+        
+        html5QrCode.start(
+            { facingMode: currentCamera },
+            config,
+            onScanSuccess,
+            onScanError
+        ).catch(err => {
+            console.error("Error al iniciar el escáner QR:", err);
+            alert("No se pudo acceder a la cámara. Por favor, asegúrate de haber dado los permisos necesarios.");
+        });
+    }
+    
+    /**
+     * Inicializa y comienza el escáner de códigos de barras (QuaggaJS).
+     */
+    function initBarcodeScanner() {
+        if (quaggaInitialized) {
+            Quagga.start();
+            return;
+        }
+        
+        Quagga.init({
+            inputStream: {
+                type: "LiveStream",
+                target: barcodeScannerElement,
+                constraints: {
+                    facingMode: currentCamera,
+                    width: { min: 640 },
+                    height: { min: 480 },
+                    aspectRatio: { min: 1, max: 2 }
+                },
+            },
+            decoder: {
+                readers: [
+                    "code_128_reader",
+                    "ean_reader",
+                    "ean_8_reader",
+                    "code_39_reader",
+                    "upc_reader",
+                ]
+            },
+            locator: {
+                patchSize: "medium",
+                halfSample: true
+            },
+            locate: true,
+            frequency: 10
+        }, function(err) {
+            if (err) {
+                console.error("Error al iniciar Quagga:", err);
+                alert("No se pudo iniciar el escáner de códigos de barras.");
+                return;
+            }
+            quaggaInitialized = true;
+            Quagga.start();
+            
+            const placeholder = barcodeScannerElement.querySelector('.scanner-placeholder');
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+        });
+        
+        Quagga.onDetected(function(data) {
+            const code = data.codeResult.code;
+            console.log(`Código de barras detectado: ${code}`);
+            handleDetectedCode(code);
+        });
+    }
+    
+    /**
+     * Cambia entre el escáner QR y el escáner de Código de Barras.
+     * @param {string} type - 'qr' o 'barcode'.
+     */
+    function toggleScanner(type) {
+        if (type === currentScanner) return;
+        
+        if (currentScanner === 'qr') {
+            if (html5QrCode) {
+                html5QrCode.pause();
+            }
+        } else {
+            if (quaggaInitialized) {
+                Quagga.stop();
+            }
+        }
+        
+        qrOption.classList.toggle('active', type === 'qr');
+        barcodeOption.classList.toggle('active', type === 'barcode');
+        qrScannerElement.style.display = type === 'qr' ? 'block' : 'none';
+        barcodeScannerElement.style.display = type === 'barcode' ? 'block' : 'none';
+        
+        currentScanner = type;
+        
+        if (type === 'qr') {
+            initQRScanner();
+        } else {
+            initBarcodeScanner();
+        }
+    }
+    
+    /**
+     * Callback para cuando el escáner QR detecta un código.
+     * @param {string} decodedText - El texto decodificado del QR.
+     */
+    function onScanSuccess(decodedText, decodedResult) {
+        console.log(`Código QR detectado: ${decodedText}`);
+        handleDetectedCode(decodedText);
+    }
+    
+    /**
+     * Procesa el código detectado (ya sea QR o de barras).
+     */
+    async function handleDetectedCode(code) {
+        if (code === lastScannedCode) return;
+        
+        lastScannedCode = code;
+        
+        if (currentScanner === 'qr' && html5QrCode) {
+            html5QrCode.pause();
+        } else if (currentScanner === 'barcode' && quaggaInitialized) {
+            Quagga.stop();
+        }
+
+        successMessage.classList.add('d-none');
+        errorMessage.classList.add('d-none');
+        loadingSpinner.classList.remove('d-none');
+        resultCard.style.display = 'none';
+
+        let material = null;
+        try {
+            if (currentScanner === 'qr') {
+                const parsedJson = JSON.parse(code);
+                if (parsedJson.nombre && parsedJson.categoria && parsedJson.puntosPorUnidad && parsedJson.codigo_barra) {
+                    material = parsedJson;
+                }
+            }
+        } catch (e) {
+            console.log("El código no es un JSON válido, intentando buscar en el backend.");
+        }
+
+        if (!material) {
+            try {
+                const lookupEndpoint = `/api/materiales/buscar-por-codigo?codigo=${code}`;
+                console.log("Buscando material en el backend:", lookupEndpoint);
+
+                const response = await fetch(lookupEndpoint, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    material = await response.json();
+                } else if (response.status === 404) {
+                    console.log("Material no encontrado en el backend.");
+                    material = null;
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Error desconocido al buscar material en el backend.');
+                }
+            } catch (err) {
+                console.error("Error al buscar material en el backend:", err);
+                errorMessage.textContent = err.message || "Ocurrió un error al buscar el material. Intenta de nuevo.";
+                errorMessage.classList.remove('d-none');
+                loadingSpinner.classList.add('d-none');
+                
+                setTimeout(() => {
+                    errorMessage.classList.add('d-none');
+                    if (currentScanner === 'qr') { html5QrCode.resume(); } 
+                    else if (quaggaInitialized) { Quagga.start(); }
+                }, 3000);
+                return;
+            }
+        }
+
+        loadingSpinner.classList.add('d-none');
+        if (material) {
+            lastScannedMaterialData = material;
+            displayMaterialInfo(material);
+        } else {
+            materialName.textContent = "Material no reconocido";
+            materialDescription.textContent = "Este código no está registrado en nuestro sistema. Por favor, verifica el código.";
+            materialCategory.textContent = "";
+            pointsEarned.textContent = "+0";
+            confirmationButtons.classList.remove('d-none');
+            resultCard.style.display = 'block';
+            lastScannedMaterialData = null;
+        }
+    }
+    
+    /**
+     * Muestra la información del material en la tarjeta de resultados.
+     * @param {object} material - Objeto con los datos del material.
+     */
+    function displayMaterialInfo(material) {
+        resultCard.style.display = 'block';
+        
+        materialName.textContent = material.nombre;
+        materialDescription.textContent = material.descripcion;
+        materialCategory.textContent = material.categoria;
+        
+        materialQuantityInput.value = 1;
+        updateTotalPoints();
+
+        confirmationButtons.classList.remove('d-none');
+    }
+
+    /**
+     * Actualiza los puntos totales mostrados en función de la cantidad y los puntos por unidad.
+     */
+    function updateTotalPoints() {
+        if (lastScannedMaterialData) {
+            const quantity = parseInt(materialQuantityInput.value);
+            const pointsPerUnit = lastScannedMaterialData.puntosPorUnidad;
+            const totalPoints = pointsPerUnit * quantity;
+            pointsEarned.textContent = `+${totalPoints}`;
+        }
+    }
+
+    materialQuantityInput.addEventListener('input', updateTotalPoints);
+    
+    /**
+     * Callback para manejar errores del escáner.
+     */
+    function onScanError(errorMessage) {
+        // console.log("Error en el escáner:", errorMessage);
+    }
+    
+    /**
+     * Cambia la cámara activa (frontal/trasera) y reinicia el escáner.
+     */
+    async function toggleCamera() {
+        try {
+            if (currentScanner === 'qr' && html5QrCode) {
+                await html5QrCode.stop();
+            } else if (currentScanner === 'barcode' && quaggaInitialized) {
+                Quagga.stop();
+            }
+            
+            currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+            
+            if (currentScanner === 'qr') {
+                initQRScanner();
+            } else {
+                initBarcodeScanner();
+            }
+            
+            const cameraName = currentCamera === 'environment' ? 'Trasera' : 'Frontal';
+            toggleCameraBtn.innerHTML = `<i class="fas fa-camera"></i> Cámara ${cameraName}`;
+            
+        } catch (err) {
+            console.error("Error al cambiar de cámara:", err);
+            alert("No se pudo cambiar la cámara. Intenta de nuevo.");
+        }
+    }
+    
+    /**
+     * Confirma el reciclaje, envía los datos al backend y maneja la respuesta.
+     */
+    async function confirmRecycling() {
+        if (!lastScannedMaterialData) {
+            alert("No hay datos de material para registrar.");
+            return;
+        }
+
+        const quantity = parseInt(materialQuantityInput.value);
+        if (isNaN(quantity) || quantity < 1) {
+            alert("Por favor, introduce una cantidad válida (mínimo 1).");
+            return;
+        }
+
+        successMessage.classList.add('d-none');
+        errorMessage.classList.add('d-none');
+        loadingSpinner.classList.remove('d-none');
+        resultCard.style.display = 'none';
+        confirmationButtons.classList.add('d-none');
+        
+        try {
+            const endpoint = '/api/reciclajes/crear-desde-qr'; 
+            
+            const payload = {
+                qrData: JSON.stringify(lastScannedMaterialData),
+                quantity: quantity
+            };
+            
+            console.log("Enviando a la API:", payload);
+            
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            });
+            
+            const responseData = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(responseData.message || responseData.error || 'Error desconocido al registrar el material');
+            }
+            
+            successMessage.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>¡Material "${responseData.material.nombre}" (${quantity} unidades) registrado con éxito! Ganaste ${responseData.pointsEarned} puntos.</span>
+            `;
+            loadingSpinner.classList.add('d-none');
+            successMessage.classList.remove('d-none');
+            
+        } catch (err) {
+            console.error("Error al registrar material:", err);
+            loadingSpinner.classList.add('d-none');
+            errorMessage.textContent = err.message || "Ocurrió un error al registrar tu material. Intenta de nuevo.";
+            errorMessage.classList.remove('d-none');
+            resultCard.style.display = 'block';
+            confirmationButtons.classList.remove('d-none');
+        } finally {
+            setTimeout(() => {
+                successMessage.classList.add('d-none');
+                errorMessage.classList.add('d-none');
+                lastScannedCode = null;
+                lastScannedMaterialData = null;
+
+                if (currentScanner === 'qr') {
+                    initQRScanner();
+                } else if (quaggaInitialized) {
+                    Quagga.start();
+                }
+            }, 5000);
+        }
+    }
+
+    /**
+     * Cancela el escaneo, oculta la tarjeta de resultados y reinicia el escáner.
+     */
+    function cancelScan() {
+        resultCard.style.display = 'none';
+        confirmationButtons.classList.add('d-none');
+        lastScannedCode = null;
+        lastScannedMaterialData = null;
+        
+        successMessage.classList.add('d-none');
+        errorMessage.classList.add('d-none');
+
+        if (currentScanner === 'qr') {
+            html5QrCode.resume();
+        } else if (quaggaInitialized) {
+            Quagga.start();
+        }
+    }
+    
+    // Asignación de Event Listeners
+    toggleCameraBtn.addEventListener('click', toggleCamera);
+    confirmBtn.addEventListener('click', confirmRecycling);
+    cancelBtn.addEventListener('click', cancelScan);
+    qrOption.addEventListener('click', () => toggleScanner('qr'));
+    barcodeOption.addEventListener('click', () => toggleScanner('barcode'));
+    
+    // Iniciar la aplicación cuando el DOM esté completamente cargado
+    document.addEventListener('DOMContentLoaded', () => {
+        initQRScanner();
+    });
+</script>
+</body>
+</html>

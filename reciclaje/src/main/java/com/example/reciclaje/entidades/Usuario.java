@@ -24,7 +24,9 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -72,8 +74,11 @@ public class Usuario implements UserDetails {
     @Column(name = "avatar_id")
     private String avatarId;
 
+<<<<<<< HEAD
     @ToString.Exclude
     @JsonIgnore
+=======
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "nivel_id")
     private Nivel nivel;
@@ -85,8 +90,11 @@ public class Usuario implements UserDetails {
     private Set<UsuarioRol> usuarioRoles = new HashSet<>();
 
     // Relación con Logros - Versión corregida
+<<<<<<< HEAD
     @ToString.Exclude
     @JsonIgnore
+=======
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "usuario_logro",
@@ -117,6 +125,7 @@ public class Usuario implements UserDetails {
     public String getUsername() {
         return email;
     }
+<<<<<<< HEAD
     
     public void setPuntos(int puntos){
     	
@@ -124,6 +133,8 @@ public class Usuario implements UserDetails {
     	actualizarPuntos();
     	
     }
+=======
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
 
     @Override
     public boolean isAccountNonExpired() {

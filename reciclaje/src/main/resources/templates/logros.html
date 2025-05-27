@@ -236,12 +236,20 @@
         <!-- Puntos y progreso -->
         <div class="eco-points">
             <div class="point-item">
+<<<<<<< HEAD
                 <div class="point-value" th:text="${usuario.puntos} + ' pts'">350 pts</div>
 				
                 <div class="point-label">Puntos totales</div>
             </div>
             <div class="point-item">
                 <div class="point-value" th:text="${usuario.nivel.nombre}">5</div>
+=======
+                <div class="point-value" th:text="${puntosTotales} + ' pts'">350 pts</div>
+                <div class="point-label">Puntos totales</div>
+            </div>
+            <div class="point-item">
+                <div class="point-value" th:text="${nivelActual}">5</div>
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
                 <div class="point-label">Nivel</div>
             </div>
             <div class="point-item">
@@ -275,7 +283,11 @@
                         <div class="progress-container">
                             <div class="progress-text">
                                 <span>¡Completado!</span>
+<<<<<<< HEAD
                                 <span th:text="${logro.puntosRequeridos} + ' pts'">50 pts</span>
+=======
+                                <span th:text="${logro.puntos} + ' pts'">50 pts</span>
+>>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
                             </div>
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: 100%"></div>

@@ -40,28 +40,18 @@ public class Reciclaje {
 	    private Material material;
 
 	    private int cantidad;
-	    private LocalDateTime fecha;
-	    private int puntosObtenidos; // = cantidad * material.puntosPorUnidad
+
+	    @Column(name = "fecha_reciclaje") // Nombre de columna para la DB si usas snake_case
+	    private LocalDateTime fechaReciclaje; // ¡Consistencia con el servicio!
+
+	    @Column(name = "puntos_ganados") // Nombre de columna para la DB si usas snake_case
+	    private int puntosGanados; // ¡Consistencia con el servicio!
+
 	    @Column(nullable = false)
 	    private boolean validado = false;
+
 	    private LocalDateTime fechaValidacion;
 
-		
 
-	    @PrePersist
-	    public void calcularPuntos() {
-	        this.puntosObtenidos = this.cantidad * material.getPuntosPorUnidad();
-	        this.fecha = LocalDateTime.now();
-	    }
-
-	    public boolean getValidado() {
-	        return this.validado;
-	    }
-
-	    public void setValidado(boolean validado) {
-	        this.validado = validado;
-	        if(validado) {
-	            this.fechaValidacion = LocalDateTime.now();
-	        }
-	    }
+	 
 }
