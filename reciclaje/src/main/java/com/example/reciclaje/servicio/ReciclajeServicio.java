@@ -93,10 +93,7 @@ public class ReciclajeServicio {
         
         // Guardar cambios
         usuarioRepository.save(usuario);
-<<<<<<< HEAD
         
-=======
->>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
     }
     
     
