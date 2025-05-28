@@ -1,17 +1,22 @@
 package com.example.reciclaje.servicio;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.reciclaje.entidades.Logro;
 import com.example.reciclaje.entidades.Usuario;
+import com.example.reciclaje.entidades.UsuarioLogro;
 import com.example.reciclaje.repositorio.LogroRepositorio;
+import com.example.reciclaje.repositorio.UsuarioLogroRepositorio;
 import com.example.reciclaje.repositorio.UsuarioRepositorio;
 
 import jakarta.transaction.Transactional;
@@ -21,24 +26,57 @@ public class LogroServicio {
 	
 	 private final LogroRepositorio logroRepositorio;
 	    private final UsuarioRepositorio usuarioRepositorio;
+	    private final UsuarioLogroRepositorio usuarioLogroRepositorio;
 
 	    @Autowired
-	    public LogroServicio(LogroRepositorio logroRepositorio, UsuarioRepositorio usuarioRepositorio) {
+	    public LogroServicio(LogroRepositorio logroRepositorio, UsuarioRepositorio usuarioRepositorio, UsuarioLogroRepositorio usuarioLogroRepositorio) {
 	        this.logroRepositorio = logroRepositorio;
 	        this.usuarioRepositorio = usuarioRepositorio;
+	        this.usuarioLogroRepositorio = usuarioLogroRepositorio;
 	    }
 
-	    public List<Logro> obtenerTodosLogros() {
-	        return logroRepositorio.findAll();
+
+	    public Page<Logro> obtenerTodosLogros(Pageable pageable) {
+	        return logroRepositorio.findAll(pageable);
+	    }
+	    
+	    public Logro obtenerLogroPorId(Long id) {
+	        return logroRepositorio.findById(id)
+	                .orElseThrow(() -> new RuntimeException("logro no encontrado"));
 	    }
 
-	    public Optional<Logro> obtenerLogroPorId(Long id) {
-	        return logroRepositorio.findById(id);
-	    }
+	    
 
 	    public Logro crearLogro(Logro logro) {
 	        return logroRepositorio.save(logro);
 	    }
+	    
+	  
+	    @Transactional
+	    public void desbloquearLogro(Long usuarioId, Long logroId) {
+	        if (!usuarioLogroRepositorio.existsByUsuarioIdAndLogroId(usuarioId, logroId)) {
+	            Usuario usuario = usuarioRepositorio.findById(usuarioId)
+	                                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+	            Logro logro = obtenerLogroPorId(logroId);
+	            
+	            UsuarioLogro usuarioLogro = new UsuarioLogro();
+	            usuarioLogro.setUsuario(usuario);
+	            usuarioLogro.setLogro(logro);
+	            usuarioLogro.setFechaObtencion(LocalDateTime.now());
+	            
+	            usuarioLogroRepositorio.save(usuarioLogro);
+	        }
+	    }
+	    
+	    
+	    
+	    public List<Logro> obtenerLogrosDesbloqueados(Long usuarioId) {
+	        return usuarioLogroRepositorio.findByUsuarioId(usuarioId).stream()
+	                .map(UsuarioLogro::getLogro)
+	                .collect(Collectors.toList());
+	    }
+	    
+	    
 
 	    public Logro actualizarLogro(Long id, Logro logroActualizado) {
 	        return logroRepositorio.findById(id)
@@ -58,49 +96,13 @@ public class LogroServicio {
 	        logroRepositorio.deleteById(id);
 	    }
 
-	    public List<Logro> obtenerLogrosPorUsuario(String email) {
-	        Usuario usuario = usuarioRepositorio.findByEmail(email)
-	                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-	        return new ArrayList<>(usuario.getLogrosDesbloqueados());
-	    }
+	    
 
 	    public List<Logro> findByUsuarioId(Long id) {
 	        return logroRepositorio.findByUsuarioId(id);
 	    }
 	    
-	    /**
-	     * Verifica y desbloquea logros para un usuario basado en su actividad de reciclaje
-	     * @param usuario El usuario a verificar
-	     */
-	    @Transactional
-	    public void verificarLogrosUsuario(Usuario usuario) {
-	        // Obtener todos los logros disponibles
-	        List<Logro> todosLogros = logroRepositorio.findAll();
-	        
-	        // Obtener logros ya desbloqueados por el usuario (convertimos a Set para mejor performance)
-	        Set<Logro> logrosDesbloqueados = new HashSet<>(usuario.getLogrosDesbloqueados());
-	        
-	        // Verificar cada logro disponible
-	        for (Logro logro : todosLogros) {
-	            // Si el usuario no tiene este logro aún
-	            if (!logrosDesbloqueados.contains(logro)) {
-	                // Verificar si cumple los requisitos (puntos requeridos)
-	                if (logro.getPuntosRequeridos() != null && 
-	                    usuario.getPuntos() >= logro.getPuntosRequeridos()) {
-	                    
-	                    // Desbloquear el logro (bidireccional)
-	                    usuario.getLogrosDesbloqueados().add(logro);
-	                    logro.getUsuarios().add(usuario);
-	                    
-	                    // Guardar cambios
-	                    usuarioRepositorio.save(usuario);
-	                    logroRepositorio.save(logro);
-	                    
-	                    // Opcional: Aquí podrías registrar una notificación
-	                }
-	            }
-	        }
-	    }
+	    
 	    
 	    
 	    

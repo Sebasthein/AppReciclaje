@@ -1,29 +1,26 @@
 package com.example.reciclaje.servicio;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
-import java.util.UUID; // Importar UUID para generar semillas únicas si es necesario
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.reciclaje.entidades.Logro;
 import com.example.reciclaje.entidades.Nivel;
 import com.example.reciclaje.entidades.Rol;
 import com.example.reciclaje.entidades.Usuario;
+import com.example.reciclaje.entidades.UsuarioLogro;
 import com.example.reciclaje.entidades.UsuarioRol;
+import com.example.reciclaje.repositorio.LogroRepositorio;
 import com.example.reciclaje.repositorio.NivelRepositorio;
 import com.example.reciclaje.repositorio.RolRepositorio;
+import com.example.reciclaje.repositorio.UsuarioLogroRepositorio;
 import com.example.reciclaje.repositorio.UsuarioRepositorio;
 import com.example.reciclaje.servicioDTO.UsuarioDTO;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+
 public class UsuarioServicio {
 
     private final UsuarioRepositorio usuarioRepository;
@@ -38,6 +36,8 @@ public class UsuarioServicio {
     private final PasswordEncoder passwordEncoder;
     private final RolRepositorio rolRepositorio;
     private final LogroServicio logroService;
+    private final LogroRepositorio logroRepositorio;
+    private final UsuarioLogroRepositorio usuarioLogroRepositorio;
  
     private final NivelServicio nivelServicio;
     
@@ -269,27 +269,7 @@ public class UsuarioServicio {
         usuarioRepository.save(usuario);
     }
     
-    @Transactional
-    public void verificarYAsignarLogros(Usuario usuario) {
-        Nivel nuevoNivel = nivelServicio.obtenerNivelPorPuntos(usuario.getPuntos());
 
-        if (!nuevoNivel.equals(usuario.getNivel())) {
-            usuario.setNivel(nuevoNivel);
-
-            Logro logro = nuevoNivel.getLogro();
-            if (logro != null && !usuario.getLogrosDesbloqueados().contains(logro)) {
-                usuario.getLogrosDesbloqueados().add(logro);
-                // Mantener la relación bidireccional
-                logro.getUsuarios().add(usuario);
-                
-                // Opcional: Registrar en logs
-                log.info("Usuario {} desbloqueó el logro {} al alcanzar el nivel {}", 
-                    usuario.getEmail(), 
-                    logro.getNombre(), 
-                    nuevoNivel.getNombre());
-            }
-        }
-    }
     
     /**
      * Obtiene los logros desbloqueados por un usuario
@@ -297,15 +277,23 @@ public class UsuarioServicio {
      * @return Lista de logros desbloqueados
      */
     public List<Logro> obtenerLogrosDesbloqueados(Long usuarioId) {
+        // Obtener el usuario
         Usuario usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        return new ArrayList<>(usuario.getLogrosDesbloqueados());
+        
+        // Obtener todos los logros desbloqueados por el usuario a través de la relación UsuarioLogro
+        List<UsuarioLogro> usuarioLogros = usuarioLogroRepositorio.findByUsuarioId(usuarioId);
+        
+        // Extraer los logros de la relación
+        return usuarioLogros.stream()
+            .map(UsuarioLogro::getLogro)
+            .collect(Collectors.toList());
     }
     /**
      * Desbloquea un logro para un usuario si no lo tiene ya
      * @param usuarioId ID del usuario
      * @param logroId ID del logro a desbloquear
-     */
+     
     @Transactional
     public void desbloquearLogro(Long usuarioId, Long logroId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
@@ -324,7 +312,7 @@ public class UsuarioServicio {
      * @param usuarioId ID del usuario
      * @param logroId ID del logro a verificar
      * @return true si el usuario tiene el logro, false si no
-     */
+     
     public boolean tieneLogro(Long usuarioId, Long logroId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -335,7 +323,7 @@ public class UsuarioServicio {
     /**
      * Desbloquea automáticamente logros basados en los puntos del usuario
      * @param usuarioId ID del usuario
-     */
+     
     @Transactional
     public void verificarLogrosPorPuntos(Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
@@ -359,7 +347,7 @@ public class UsuarioServicio {
      * Obtiene los logros que un usuario aún no ha desbloqueado
      * @param usuarioId ID del usuario
      * @return Lista de logros no desbloqueados
-     */
+     
     public List<Logro> obtenerLogrosNoDesbloqueados(Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -373,7 +361,7 @@ public class UsuarioServicio {
      * @param usuarioId ID del usuario
      * @param logroId ID del logro
      * @return Porcentaje de progreso (0-100)
-     */
+     
     public int obtenerProgresoHaciaLogro(Long usuarioId, Long logroId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -396,5 +384,6 @@ public class UsuarioServicio {
         usuario.getLogrosDesbloqueados().size(); // fuerza carga
         return usuario;
     }
+    */
     
 }

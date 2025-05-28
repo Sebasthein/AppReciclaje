@@ -64,7 +64,7 @@ public class LogroController {
             if (logros.isEmpty()) {
                 logger.debug("No se encontraron logros para el usuario");
             } else {
-<<<<<<< HEAD
+
             	logger.debug("Primer logro: {}", logros.get(0).toString());
             }
 
@@ -72,14 +72,14 @@ public class LogroController {
             model.addAttribute("logrosCompletados", logros);
             //model.addAttribute("logrosString",logros.getFirst().toString());
             model.addAttribute("usuario", usuarioActual); // Añadir nombre de usuario a la vista
-=======
+
                 logger.debug("Primer logro: {}", logros.get(0).toString());
-            }
+            
 
             // Preparar modelo
             model.addAttribute("logros", logros);
             model.addAttribute("usuario", usuarioActual.getNombre()); // Añadir nombre de usuario a la vista
->>>>>>> parent of 5d9ad46 (Revert "Merge branch 'main' of https://github.com/Sebasthein/AppReciclaje")
+             
 
             return "logros";
 
