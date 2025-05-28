@@ -1,6 +1,6 @@
 package com.example.reciclaje.entidades;
 
-import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -37,15 +37,13 @@ public class Nivel {
 
     @JsonProperty("nombre")
     private String nombre; // Novato, Intermedio, Pro...
+    
     private Integer puntosRequeridos;
 
     @OneToMany(mappedBy = "nivel")
     @JsonIgnore
     @ToString.Exclude
-    private List<Usuario> usuarios;
-    
-    @OneToOne
-    @JoinColumn(name = "logro_id")
-    private Logro logro;
+    private Set<Usuario> usuarios;
+       
 
 }

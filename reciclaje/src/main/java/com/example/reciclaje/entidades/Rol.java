@@ -48,19 +48,6 @@ public class Rol {
 	    @OneToMany(mappedBy = "rol", cascade = CascadeType.ALL, orphanRemoval = true)
 	    private Set<UsuarioRol> usuarioRoles = new HashSet<>();
 
-	  /*  // Métodos para manejar usuarios
-	    public void addUsuario(Usuario usuario) {
-	        UsuarioRol usuarioRol = new UsuarioRol(usuario, this);
-	        usuarioRoles.add(usuarioRol);
-	        usuario.getUsuarioRoles().add(usuarioRol);
-	    }
-
-	    public void removeUsuario(Usuario usuario) {
-	        UsuarioRol usuarioRol = new UsuarioRol(usuario, this);
-	        usuario.getUsuarioRoles().remove(usuarioRol);
-	        usuarioRoles.remove(usuarioRol);
-	    }
-*/
 	    // Constructor adicional
 	    public Rol(String nombre, String descripcion) {
 	        this.nombre = nombre;
