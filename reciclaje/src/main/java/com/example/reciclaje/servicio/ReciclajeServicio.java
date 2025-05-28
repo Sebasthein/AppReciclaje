@@ -284,7 +284,7 @@ public class ReciclajeServicio {
     /**
      * Verifica y añade logros al usuario.
      */
-    private void verificarLogrosNuevoNivel(Usuario usuario, Nivel nivel) {
+  /*  private void verificarLogrosNuevoNivel(Usuario usuario, Nivel nivel) {
         if (nivel.getLogro() != null && !usuario.getLogrosDesbloqueados().contains(nivel.getLogro())) {
             usuario.getLogrosDesbloqueados().add(nivel.getLogro());
             // No guardar usuario aquí, se guarda al final de la transacción de validación
@@ -293,7 +293,7 @@ public class ReciclajeServicio {
             // Mantén la relación bidireccional actualizada
             nivel.getLogro().getUsuarios().add(usuario);
         }
-    }
+    }***/
 
     public List<Reciclaje> obtenerReciclajesPorUsuario(Long usuarioId) {
         return reciclajeRepository.findByUsuarioId(usuarioId);

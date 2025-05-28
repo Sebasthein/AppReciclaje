@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -41,8 +42,8 @@ public class Logro {
     
 
 
-    @OneToMany(mappedBy = "logro")
-    private Set<UsuarioLogro> usuarios;
+    @OneToMany(mappedBy = "logro", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UsuarioLogro> usuarioLogros = new HashSet<>();
 
 
  

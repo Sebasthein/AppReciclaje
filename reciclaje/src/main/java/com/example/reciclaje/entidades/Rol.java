@@ -26,8 +26,6 @@ import lombok.Setter;
 @Entity
 @Table(name = "roles")
 @Data
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -42,8 +40,8 @@ public class Rol {
 
 	    private String descripcion;
 
-	    @ManyToMany(mappedBy = "roles")
-	    private Set<Usuario> usuarios = new HashSet<>();
+	 //   @ManyToMany(mappedBy = "roles")
+	 //   private Set<Usuario> usuarios = new HashSet<>();
 	    
 	    @OneToMany(mappedBy = "rol", cascade = CascadeType.ALL, orphanRemoval = true)
 	    private Set<UsuarioRol> usuarioRoles = new HashSet<>();
@@ -53,4 +51,9 @@ public class Rol {
 	        this.nombre = nombre;
 	        this.descripcion = descripcion;
 	    }
+	    
+	   
+
+	    
+	    
 }

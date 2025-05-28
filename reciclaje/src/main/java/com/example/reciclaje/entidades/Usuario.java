@@ -66,13 +66,15 @@ public class Usuario implements UserDetails {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
     private List<Reciclaje> reciclajes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private Set<UsuarioRol> usuarioRoles = new HashSet<>();
+    
+    
 
     // Relación con Logros - Versión corregida
 
     @OneToMany(mappedBy = "usuario")
-    private Set<UsuarioLogro> logrosObtenidos = new HashSet<>();
+    private Set<UsuarioLogro> usuarioLogros = new HashSet<>();
 
     
 
@@ -94,7 +96,7 @@ public class Usuario implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
         for (UsuarioRol usuarioRol : usuarioRoles) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + usuarioRol.getRol().getNombre()));
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + usuarioRol.geRol().getNombre()));
         }
         return authorities;
     }

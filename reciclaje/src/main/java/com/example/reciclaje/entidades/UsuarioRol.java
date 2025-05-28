@@ -17,7 +17,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "usuario_roles")
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -40,11 +39,35 @@ public class UsuarioRol {
 	    
 	    private LocalDate fechaAsignacion = LocalDate.now();
 
-	    // Constructor para fácil creación
-	    public UsuarioRol(Usuario usuario, Rol rol) {
+	    
+	 // Constructor para fácil creación
+		public UsuarioRol(Usuario usuario, Rol rol) {
+			super();
+			this.usuario = usuario;
+			this.rol = rol;
+		}
+
+		public UsuarioRol(Rol rol) {
+			super();
+			this.rol = rol;
+		}
+
+		public Rol geRol() {
+			// TODO Auto-generated method stub
+			return this.rol;
+		}
+		
+		public void setUsuario(Usuario usuario) {
 	        this.usuario = usuario;
+	    }
+
+	    public void setRol(Rol rol) {
 	        this.rol = rol;
 	    }
-	
+
+	    public void setActivo(boolean activo) {
+	        this.activo = activo;
+	    }
+		
 
 }

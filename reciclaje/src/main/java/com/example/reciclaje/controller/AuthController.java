@@ -152,7 +152,7 @@ usuario.setTelefono(registroRequest.getTelefono());
 	@GetMapping("/dashboard")
 	 public String dashboard(Model model, Principal principal) {
 	 Usuario usuario = usuarioServicio.findByEmail(principal.getName());
-	 int logros = usuario.getLogrosDesbloqueados().size();
+	 int logros = usuario.getUsuarioLogros().size();
 	 
 	 //Actualizar Puntos
 	 List<Reciclaje> reciclajes = reciclajeServicio.obtenerReciclajesPorUsuario(usuario.getId()); 

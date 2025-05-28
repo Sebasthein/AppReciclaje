@@ -2,6 +2,7 @@ package com.example.reciclaje.controller;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,6 @@ public class LogroController {
     @GetMapping("/logros")
     public String mostrarLogros(Principal principal, Model model) {
         try {
-            // Validación de autenticación
             if (principal == null) {
                 logger.warn("Intento de acceso no autenticado a /api/logros");
                 return "redirect:/login";
@@ -49,7 +49,6 @@ public class LogroController {
             String email = principal.getName();
             logger.debug("Buscando logros para usuario: {}", email);
 
-            // Obtener usuario
             Usuario usuarioActual = usuarioService.findByEmail(email);
             if (usuarioActual == null) {
                 logger.error("Usuario no encontrado en BD para email: {}", email);
@@ -57,29 +56,29 @@ public class LogroController {
                 return "error";
             }
 
-            // Obtener logros
-            List<Logro> logros = logroService.findByUsuarioId(usuarioActual.getId());
+            // Obtén todos los logros disponibles o los logros del usuario
+            List<Logro> logros = logroService.obtenerLogrosPorUsuario(usuarioActual.getId());
             logger.info("Encontrados {} logros para usuario ID: {}", logros.size(), usuarioActual.getId());
 
-            if (logros.isEmpty()) {
-                logger.debug("No se encontraron logros para el usuario");
-            } else {
+            int puntosUsuario = usuarioActual.getPuntos();
 
-            	logger.debug("Primer logro: {}", logros.get(0).toString());
-            }
+            // Separar logros completados y en progreso
+            List<Logro> logrosCompletados = logros.stream()
+                .filter(logro -> logro.getPuntosRequeridos() <= puntosUsuario)
+                .collect(Collectors.toList());
 
-            // Preparar modelo
-            model.addAttribute("logrosCompletados", logros);
-            //model.addAttribute("logrosString",logros.getFirst().toString());
-            model.addAttribute("usuario", usuarioActual); // Añadir nombre de usuario a la vista
+            List<Logro> logrosEnProgreso = logros.stream()
+                .filter(logro -> logro.getPuntosRequeridos() > puntosUsuario)
+                .collect(Collectors.toList());
 
-                logger.debug("Primer logro: {}", logros.get(0).toString());
-            
+            model.addAttribute("logrosCompletados", logrosCompletados);
+            model.addAttribute("logrosEnProgreso", logrosEnProgreso);
+            model.addAttribute("usuario", usuarioActual);
+            model.addAttribute("puntosTotales", puntosUsuario);
+            model.addAttribute("nivelActual", usuarioActual.getNivel().getNombre());
 
-            // Preparar modelo
-            model.addAttribute("logros", logros);
-            model.addAttribute("usuario", usuarioActual.getNombre()); // Añadir nombre de usuario a la vista
-             
+            // Si usas ranking, descomenta y adapta
+            // model.addAttribute("ranking", usuarioService.obtenerRanking(usuarioActual.getId()));
 
             return "logros";
 

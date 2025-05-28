@@ -98,8 +98,11 @@ public class LogroServicio {
 
 	    
 
-	    public List<Logro> findByUsuarioId(Long id) {
-	        return logroRepositorio.findByUsuarioId(id);
+	    public List<Logro> obtenerLogrosPorUsuario(Long usuarioId) {
+	        List<UsuarioLogro> usuarioLogros = usuarioLogroRepositorio.findByUsuarioId(usuarioId);
+	        return usuarioLogros.stream()
+	                            .map(UsuarioLogro::getLogro)
+	                            .collect(Collectors.toList());
 	    }
 	    
 	    

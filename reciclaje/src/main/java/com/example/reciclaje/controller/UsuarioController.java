@@ -26,6 +26,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.reciclaje.entidades.Rol;
 import com.example.reciclaje.entidades.Usuario;
+import com.example.reciclaje.entidades.UsuarioRol;
 import com.example.reciclaje.repositorio.RolRepositorio;
 import com.example.reciclaje.repositorio.UsuarioRepositorio;
 import com.example.reciclaje.seguridad.CustomUserDetails;
@@ -84,8 +85,11 @@ public class UsuarioController {
 	         Rol rolUser = rolRepository.findByNombre("USER")
 	             .orElseThrow(() -> new IllegalArgumentException("El rol USER no existe"));
 	         
-	         // Asignar el rol al usuario (esto creará la relación en usuario_roles)
-	         usuario.getRoles().add(rolUser);
+	         // Crear la relación UsuarioRol
+	         UsuarioRol usuarioRol = new UsuarioRol(usuario, rolUser);
+	         usuario.getUsuarioRoles().add(usuarioRol);
+	         rolUser.getUsuarioRoles().add(usuarioRol); // Opcional pero recomendable para bidireccionalidad
+
 	         
 	         // Guardar el usuario (esto debería persistir también la relación)
 	         Usuario usuarioGuardado = usuarioRepository.save(usuario);

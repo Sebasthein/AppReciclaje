@@ -17,7 +17,7 @@ public interface LogroRepositorio extends JpaRepository<Logro, Long> {
     @Query("SELECT l FROM Logro l WHERE l.puntosRequeridos > :puntos ORDER BY l.puntosRequeridos ASC")
     List<Logro> findNextAchievements(@Param("puntos") int puntos);
     
-    List<Logro> findByUsuarioId(Long usuarioId);
+   // List<Logro> findByUsuarioId(Long usuarioId);
     
     @Query("SELECT l FROM Logro l WHERE l.puntosRequeridos <= :puntosUsuario")
     List<Logro> findLogrosDisponibles(@Param("puntosUsuario") Integer puntosUsuario);
