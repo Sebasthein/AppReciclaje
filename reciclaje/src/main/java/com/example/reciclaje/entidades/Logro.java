@@ -13,6 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -40,11 +41,44 @@ public class Logro {
     @Column(nullable = true) // Temporalmente nullable
     private Integer puntosRequeridos; // Cambiado de int a Integer
     
+    @ToString.Exclude
+    @JsonIgnore
+    @ManyToOne
+    private Usuario usuario;
 
 
     @OneToMany(mappedBy = "logro", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UsuarioLogro> usuarioLogros = new HashSet<>();
 
 
+
+    @ToString.Exclude
+    @JsonIgnore
+    @ManyToMany(mappedBy = "logrosDesbloqueados", fetch = FetchType.LAZY)
+    private Set<Usuario> usuarios = new HashSet<>();
+    
+    // En la clase Logro
+    public void agregarUsuario(Usuario usuario) {
+        this.usuarios.add(usuario);
+        usuario.getLogrosDesbloqueados().add(this);
+    }
+
+
+    public void eliminarUsuario(Usuario usuario) {
+        this.usuarios.remove(usuario);
+        usuario.getLogrosDesbloqueados().remove(this);
+    }
+    
+    @Override
+    public String toString() {
+        return "Logro{" +
+            "id=" + id +
+            ", nombre='" + nombre + '\'' +
+            ", descripcion='" + descripcion + '\'' +
+            ", imagenTrofeo='" + imagenTrofeo + '\'' +
+            ", puntosRequeridos=" + puntosRequeridos +
+            '}';
+    }
+    
  
 }

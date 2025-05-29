@@ -59,8 +59,7 @@ public class LogroController {
             // Obtén todos los logros disponibles o los logros del usuario
             List<Logro> logros = logroService.obtenerLogrosPorUsuario(usuarioActual.getId());
             logger.info("Encontrados {} logros para usuario ID: {}", logros.size(), usuarioActual.getId());
-
-            int puntosUsuario = usuarioActual.getPuntos();
+        int puntosUsuario = usuarioActual.getPuntos();
 
             // Separar logros completados y en progreso
             List<Logro> logrosCompletados = logros.stream()
@@ -79,6 +78,20 @@ public class LogroController {
 
             // Si usas ranking, descomenta y adapta
             // model.addAttribute("ranking", usuarioService.obtenerRanking(usuarioActual.getId()));
+
+            if (logros.isEmpty()) {
+                logger.debug("No se encontraron logros para el usuario");
+            } else {
+            	logger.debug("Primer logro: {}", logros.get(0).toString());
+            }
+
+            // Preparar modelo
+            model.addAttribute("logrosCompletados", logros);
+            //model.addAttribute("logrosString",logros.getFirst().toString());
+            model.addAttribute("usuario", usuarioActual); // Añadir nombre de usuario a la vista
+                
+           // Añadir nombre de usuario a la vista
+
 
             return "logros";
 

@@ -796,8 +796,9 @@
         try {
             if (currentScanner === 'qr') {
                 const parsedJson = JSON.parse(code);
-                if (parsedJson.nombre && parsedJson.categoria && parsedJson.puntosPorUnidad && parsedJson.codigo_barra) {
+                if (parsedJson.nombre && parsedJson.categoria && parsedJson.puntosPorUnidad) {
                     material = parsedJson;
+					console.log(material);
                 }
             }
         } catch (e) {
@@ -925,79 +926,94 @@
     /**
      * Confirma el reciclaje, envía los datos al backend y maneja la respuesta.
      */
-    async function confirmRecycling() {
-        if (!lastScannedMaterialData) {
-            alert("No hay datos de material para registrar.");
-            return;
-        }
+	 async function confirmRecycling() {
+	     if (!lastScannedMaterialData) {
+	         alert("No hay datos de material para registrar.");
+	         return;
+	     }
 
-        const quantity = parseInt(materialQuantityInput.value);
-        if (isNaN(quantity) || quantity < 1) {
-            alert("Por favor, introduce una cantidad válida (mínimo 1).");
-            return;
-        }
+	     const quantity = parseInt(materialQuantityInput.value);
+	     if (isNaN(quantity) || quantity < 1) {
+	         alert("Por favor, introduce una cantidad válida (mínimo 1).");
+	         return;
+	     }
 
-        successMessage.classList.add('d-none');
-        errorMessage.classList.add('d-none');
-        loadingSpinner.classList.remove('d-none');
-        resultCard.style.display = 'none';
-        confirmationButtons.classList.add('d-none');
-        
-        try {
-            const endpoint = '/api/reciclajes/crear-desde-qr'; 
-            
-            const payload = {
-                qrData: JSON.stringify(lastScannedMaterialData),
-                quantity: quantity
-            };
-            
-            console.log("Enviando a la API:", payload);
-            
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(payload),
-                credentials: 'include'
-            });
-            
-            const responseData = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(responseData.message || responseData.error || 'Error desconocido al registrar el material');
-            }
-            
-            successMessage.innerHTML = `
-                <i class="fas fa-check-circle"></i>
-                <span>¡Material "${responseData.material.nombre}" (${quantity} unidades) registrado con éxito! Ganaste ${responseData.pointsEarned} puntos.</span>
-            `;
-            loadingSpinner.classList.add('d-none');
-            successMessage.classList.remove('d-none');
-            
-        } catch (err) {
-            console.error("Error al registrar material:", err);
-            loadingSpinner.classList.add('d-none');
-            errorMessage.textContent = err.message || "Ocurrió un error al registrar tu material. Intenta de nuevo.";
-            errorMessage.classList.remove('d-none');
-            resultCard.style.display = 'block';
-            confirmationButtons.classList.remove('d-none');
-        } finally {
-            setTimeout(() => {
-                successMessage.classList.add('d-none');
-                errorMessage.classList.add('d-none');
-                lastScannedCode = null;
-                lastScannedMaterialData = null;
+	     successMessage.classList.add('d-none');
+	     errorMessage.classList.add('d-none');
+	     loadingSpinner.classList.remove('d-none');
+	     resultCard.style.display = 'none';
+	     confirmationButtons.classList.add('d-none');
+	     
+	     try {
+	         // Modificación principal: Cambiar el endpoint y estructura del payload
+	         const endpoint = '/api/reciclajes/crear-desde-qr';  // Nuevo endpoint
+	         
+	         // Construir payload combinando datos del QR y cantidad
+	         const payload = {
+	             nombre: lastScannedMaterialData.nombre,
+	             categoria: lastScannedMaterialData.categoria,
+	             puntosPorUnidad: lastScannedMaterialData.puntosPorUnidad,
+	             cantidad: quantity
+	         };
+	         
+	         console.log("Enviando a la API:", payload);
+	         
+	         const response = await fetch(endpoint, {
+	             method: 'POST',
+	             headers: {
+	                 'Content-Type': 'application/json',
+	                 'X-Requested-With': 'XMLHttpRequest'
+	             },
+	             body: JSON.stringify(payload),
+	             credentials: 'include'
+	         });
+	         
+	         const responseData = await response.json();
+	         
+	         if (!response.ok) {
+	             throw new Error(responseData.error || responseData.message || 'Error desconocido al registrar el material');
+	         }
+	         
+	         // Actualizar mensaje de éxito con nueva estructura de respuesta
+	         successMessage.innerHTML = `
+	             <i class="fas fa-check-circle"></i>
+	             <span>¡Material "${responseData.material.nombre}" (${quantity} unidades) 
+	             registrado con éxito! Ganaste ${responseData.pointsEarned} puntos.</span>
+	         `;
+	         
+	         loadingSpinner.classList.add('d-none');
+	         successMessage.classList.remove('d-none');
+	         
+	     } catch (err) {
+	         console.error("Error al registrar material:", err);
+	         loadingSpinner.classList.add('d-none');
+			 // Obtener el texto crudo de la respuesta para debuggear
+			 const rawResponse = await response.text();
+			 console.error("Respuesta cruda del servidor:", rawResponse);
+	         errorMessage.textContent = err.message || "Ocurrió un error al registrar tu material. Intenta de nuevo.";
+	         errorMessage.classList.remove('d-none');
+	         resultCard.style.display = 'block';
+	         confirmationButtons.classList.remove('d-none');
+			
+			     
+			     
+			     
 
-                if (currentScanner === 'qr') {
-                    initQRScanner();
-                } else if (quaggaInitialized) {
-                    Quagga.start();
-                }
-            }, 5000);
-        }
-    }
+	     } finally {
+	         setTimeout(() => {
+	             successMessage.classList.add('d-none');
+	             errorMessage.classList.add('d-none');
+	             lastScannedCode = null;
+	             lastScannedMaterialData = null;
+
+	             if (currentScanner === 'qr') {
+	                 initQRScanner();
+	             } else if (quaggaInitialized) {
+	                 Quagga.start();
+	             }
+	         }, 5000);
+	     }
+	 }
 
     /**
      * Cancela el escaneo, oculta la tarjeta de resultados y reinicia el escáner.
