@@ -696,52 +696,50 @@
                 
 
                 // Realiza la petición fetch
-                fetch('/api/registro', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        // Si la respuesta no es OK, intenta leer el error del JSON
-                        return response.json().then(err => {
-                            // Si el backend envía un campo 'error', úsalo. Si no, un mensaje genérico.
-                            throw new Error(err.error || 'Error en el registro');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    showCustomAlert('¡Registro exitoso! Redirigiendo...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/login?registro=exitoso';
-                    }, 1500);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showCustomAlert(error.message || 'Error al registrar. Intente nuevamente.', 'danger');
-                    
-                    // Resalta campos con error si es necesario
-                    if (error.message && error.message.toLowerCase().includes('email')) {
-                        document.getElementById('email').classList.add('is-invalid');
-                        document.getElementById('emailError').textContent = error.message;
-                    }
-                    // Puedes añadir más lógica aquí para otros campos si el backend devuelve errores específicos
-                    if (error.message && (error.message.toLowerCase().includes('teléfono') || error.message.toLowerCase().includes('telefono'))) {
-                        document.getElementById('telefono').classList.add('is-invalid');
-                        document.getElementById('telefonoError').textContent = error.message;
-                    }
-                    if (error.message && (error.message.toLowerCase().includes('dirección') || error.message.toLowerCase().includes('direccion'))) {
-                        document.getElementById('direccion').classList.add('is-invalid');
-                        document.getElementById('direccionError').textContent = error.message;
-                    }
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-user-plus me-2"></i> Crear cuenta';
-                });
+				fetch('/api/registro', {
+				  method: 'POST',
+				  headers: {'Content-Type': 'application/json'},
+				  body: JSON.stringify(formData)
+				})
+				.then(response => {
+				  const contentType = response.headers.get('content-type');
+				  
+				  if (response.ok) {
+				    return response.json();
+				  }
+				  
+				  if (contentType?.includes('application/json')) {
+				    return response.json().then(err => { 
+				      throw new Error(err.error || JSON.stringify(err)) 
+				    });
+				  }
+				  
+				  return response.text().then(text => {
+				    throw new Error(text || `Error ${response.status}`);
+				  });
+				})
+				.then(data => {
+				  showCustomAlert('¡Registro exitoso!', 'success');
+				  setTimeout(() => window.location.href = '/login', 1500);
+				})
+				.catch(error => {
+				  showCustomAlert(error.message, 'danger');
+				  
+				  // Manejo específico de campos
+				  if (error.message.includes('correo') || error.message.includes('email')) {
+				    document.getElementById('email').classList.add('is-invalid');
+				    document.getElementById('emailError').textContent = error.message;
+				  }
+				  
+				  if (error.message.includes('teléfono') || error.message.includes('telefono')) {
+				    document.getElementById('telefono').classList.add('is-invalid');
+				    document.getElementById('telefonoError').textContent = error.message;
+				  }
+				})
+				.finally(() => {
+				  registerBtn.disabled = false;
+				  registerBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i> Crear cuenta';
+				});
             }
         });
     </script>

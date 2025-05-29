@@ -40,10 +40,6 @@ public class Nivel {
     
     private Integer puntosRequeridos;
 
-    @OneToMany(mappedBy = "nivel")
-    @JsonIgnore
-    @ToString.Exclude
-    private Set<Usuario> usuarios;
        
 
 }
