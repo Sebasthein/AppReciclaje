@@ -89,7 +89,7 @@ public class ReciclajeServicio {
         nivelService.verificarNivelUsuario(usuario);
         
         // Verificar logros desbloqueados
-        logroServicio.verificarLogrosUsuario(usuario);
+        //logroServicio.verificarLogrosUsuario(usuario);
         
         // Guardar cambios
         usuarioRepository.save(usuario);
@@ -187,6 +187,52 @@ public class ReciclajeServicio {
      * NUEVO MÉTODO: Registra un reciclaje a partir de los datos JSON del escáner (QR/código de barras).
      * Este método es el que usará tu controlador para el flujo de escaneo del frontend.
      */
+    public MaterialScanResponse registrarReciclajeManual(
+            Long usuarioId,
+            String nombre,
+            String categoria,
+            int puntosPorUnidad,
+            int cantidad) throws Exception {
+        
+        // 1. Crear objeto Material manualmente (sin parsear QR)
+        Material scannedMaterial = new Material();
+        scannedMaterial.setNombre(nombre);
+        scannedMaterial.setCategoria(categoria);
+        scannedMaterial.setPuntosPorUnidad(puntosPorUnidad);
+        scannedMaterial.setReciclable(true); // Asumir que es reciclable
+        
+        // 2. Buscar material existente por nombre y categoría (opcional)
+        List<Material> existingMaterials = materialRepository.findByCategoriaContainingIgnoreCase(categoria);
+        Material materialToRecycle;
+        
+        if (!existingMaterials.isEmpty()) {
+            materialToRecycle = existingMaterials.get(0); // Usar el primero encontrado
+        } else {
+            materialToRecycle = materialRepository.save(scannedMaterial); // Crear nuevo material
+        }
+        
+        // 3. Registrar el evento de reciclaje (igual que en el método QR)
+        Usuario usuario = usuarioService.obtenerUsuario(usuarioId);
+        
+        Reciclaje reciclaje = new Reciclaje();
+        reciclaje.setUsuario(usuario);
+        reciclaje.setMaterial(materialToRecycle);
+        reciclaje.setCantidad(cantidad);
+        reciclaje.setFechaReciclaje(LocalDateTime.now());
+        reciclaje.setPuntosGanados(materialToRecycle.getPuntosPorUnidad() * cantidad);
+        reciclaje.setValidado(false);
+        
+        reciclaje = reciclajeRepository.save(reciclaje);
+        
+        return MaterialScanResponse.builder()
+                .material(materialToRecycle)
+                .pointsEarned(reciclaje.getPuntosGanados())
+                .message("Reciclaje manual registrado. Pendiente de validación.")
+                .build();
+    }
+    
+    
+    
     @Transactional
     public MaterialScanResponse registrarReciclajeDesdeQR(Long usuarioId, String qrDataJson, int cantidad) throws Exception {
         // 1. Parsear el JSON del QR/código de barras a un objeto Material
@@ -284,16 +330,7 @@ public class ReciclajeServicio {
     /**
      * Verifica y añade logros al usuario.
      */
-    private void verificarLogrosNuevoNivel(Usuario usuario, Nivel nivel) {
-        if (nivel.getLogro() != null && !usuario.getLogrosDesbloqueados().contains(nivel.getLogro())) {
-            usuario.getLogrosDesbloqueados().add(nivel.getLogro());
-            // No guardar usuario aquí, se guarda al final de la transacción de validación
-            // Aquí podrías agregar notificación al usuario
-            
-            // Mantén la relación bidireccional actualizada
-            nivel.getLogro().getUsuarios().add(usuario);
-        }
-    }
+    
 
     public List<Reciclaje> obtenerReciclajesPorUsuario(Long usuarioId) {
         return reciclajeRepository.findByUsuarioId(usuarioId);

@@ -4,19 +4,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.reciclaje.entidades.Reciclaje;
 import com.example.reciclaje.entidades.Usuario;
 import com.example.reciclaje.repositorio.MaterialRepositorio;
 import com.example.reciclaje.repositorio.UsuarioRepositorio;
-import com.example.reciclaje.seguridad.CustomUserDetails;
 import com.example.reciclaje.servicio.ReciclajeServicio;
 import com.example.reciclaje.servicio.UsuarioServicio;
+import com.example.reciclaje.servicioDTO.ManualRecycleRequest;
 import com.example.reciclaje.servicioDTO.MaterialScanResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -107,8 +114,56 @@ public class ReciclajeController {
 	                    ));
 	        }
 	    }
-
+	    
+	    /* JSON que recibe en el body
+	     * {
+			    "nombre": "Botella PET",
+			    "categoria": "Plástico",
+			    "puntosPorUnidad": 10,
+			    "cantidad": 3
+			}
+	     * 
+	     * */
 	    @PostMapping("/crear-desde-qr")
+	    public ResponseEntity<?> crearReciclajeManual(
+	            @RequestBody ManualRecycleRequest request,
+	            Authentication authentication) {
+	        try {
+	            // Validar campos obligatorios
+	            if (request.getNombre() == null || request.getCategoria() == null || request.getPuntosPorUnidad() <= 0) {
+	                return ResponseEntity.badRequest().body(Map.of("error", "Campos del material incompletos o inválidos"));
+	            }
+	            if (request.getCantidad() <= 0) {
+	                return ResponseEntity.badRequest().body(Map.of("error", "La cantidad debe ser al menos 1"));
+	            }
+
+	            // Obtener usuario
+	            String username = authentication.getName();
+	            Optional<Usuario> optionalUsuario = usuarioRepositorio.findByEmail(username);
+	            if (optionalUsuario.isEmpty()) {
+	                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario no autorizado");
+	            }
+	            Long usuarioId = optionalUsuario.get().getId();
+
+	            // Registrar reciclaje
+	            MaterialScanResponse response = reciclajeService.registrarReciclajeManual(
+	                usuarioId,
+	                request.getNombre(),
+	                request.getCategoria(),
+	                request.getPuntosPorUnidad(),
+	                request.getCantidad()
+	            );
+
+	            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	        } catch (Exception e) {
+	            return ResponseEntity.badRequest().body(Map.of(
+	                "error", "Error al registrar reciclaje manual",
+	                "details", e.getMessage()
+	            ));
+	        }
+	    }
+
+	    @PostMapping("/crear-desde-qr-antiguo")
 	    public ResponseEntity<?> crearDesdeQR(
 	            @RequestBody MaterialScanResponse request,
 	            Authentication authentication) {
